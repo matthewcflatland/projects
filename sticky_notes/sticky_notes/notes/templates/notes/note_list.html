@@ -1,0 +1,25 @@
+<!-- notes/templates/notes/note_list.html --> 
+{% extends 'base.html' %} 
+{% block title %} 
+  Notepad - {{ page_title }} 
+{% endblock %}
+
+{% block content %} 
+  <h2> 
+    {{ page_title }} 
+  </h2> 
+  <ul> 
+    {% for note in notes %} 
+      <li> 
+        ------------------------------------<br>
+        <a href="{% url 'note_detail' pk=note.pk %}" onclick="window.open(this.href, 'myPopup', 'width=400,height=300,toolbar=no,scrollbars=yes,resizable=no'); return false;">{{ note.title }}</a> 
+        <p> 
+          {{ note.content }} <br>
+          ------------------------------------ 
+        </p> 
+      </li> 
+    {% endfor %}
+    
+    <a href="{% url 'note_create' %}" onclick="window.open(this.href, 'myPopup', 'width=400,height=300,toolbar=no,scrollbars=yes,resizable=no'); return false;">Add note</a> 
+  </ul> 
+{% endblock %} 
