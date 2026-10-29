@@ -161,7 +161,7 @@ def build_email(user, reset_url):
 def generate_reset_url(user):
     domain = "http://127.0.0.1:8000/"
     app_name = "grabsomore"  # Make sure this matches your app name in urls.py
-    url = f"{domain}{app_name}/reset_password/"
+    url = f"{domain}{app_name}/reset/"
 
     token = secrets.token_urlsafe(16)  # Generate a random secure token
 

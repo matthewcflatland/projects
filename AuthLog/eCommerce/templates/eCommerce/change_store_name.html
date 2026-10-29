@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Change Store Name</title>
+</head>
+<body>
+    <h1>Change Store Name</h1>
+    <h2>Current Store Name: {{ store.name }}</h2>
+
+    <form method="POST" action="{% url 'eCommerce:change_store_name' store_id=store.id %}">
+        {% csrf_token %}
+        <label for="store_name">New Store Name:</label>
+        <input type="text" id="store_name" name="store_name">
+        <button type="submit">Change Name</button>
+
+    <br>
+    
+</body>
+</html>

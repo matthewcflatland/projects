@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Product Page</title>
+</head>
+<body>
+    <h1>Product Page</h1>
+
+    {% if error %}
+        <p style="color: red;">{{ error }}</p>
+    {% endif %}
+
+
+    <h2>{{ product.name }}</h2>
+    <p><strong>Description:</strong> {{ product.description }}</p>
+    <p><strong>Price:</strong> ${{ product.price }}</p>
+    <p><strong>Stock:</strong> {{ product.stock }}</p>
+    <p><strong>Store:</strong> {{ product.store.name }}</p>
+
+
+    <br>
+    <!-- Navigation Buttons -->
+    <div style="margin-top: 20px;">
+        <a href="{% url 'eCommerce:vendor_store' store_id=product.store.id %}">
+            <button>🏪 Back to Store</button>
+        </a>
+
+        <a href="{% url 'eCommerce:change_price' product_id=product.id %}">
+            <button>💰 Change Price</button>
+        </a>
+
+        <a href="{% url 'eCommerce:delete_product' product_id=product.id %}">
+            <button>💰 Delete Product</button>
+        </a>
+    </div>
+</body>
+</html>

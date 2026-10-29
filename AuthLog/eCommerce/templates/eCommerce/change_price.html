@@ -4,10 +4,10 @@
     <p style="color:red;">{{ error }}</p>
 {% endif %}
 
+<p><strong>Product Name:</strong> {{ product.name }}</p>
+<p><strong>Current Price:</strong> ${{ product.price }}</p>
 <form method="POST">
     {% csrf_token %}
-    <label>Product name:</label>
-    <input type="text" name="product" required><br><br>
 
     <label>New price:</label>
     <input type="text" name="new_price" required><br><br>
@@ -17,15 +17,7 @@
 
 <!-- Navigation Buttons -->
 <div style="margin-top: 20px;">
-    <a href="{% url 'eCommerce:products_list' %}">
-        <button>🏪 Back to Catalog</button>
-    </a>
-
-    <a href="{% url 'eCommerce:product_page' %}">
-        <button>🔍 Search Product</button>
-    </a>
-
-    <a href="{% url 'eCommerce:main_cart_page' %}">
-        <button>🛒 View Cart</button>
+    <a href="{% url 'eCommerce:vendor_store' store_id=product.store.id %}">
+        <button>🏪 Back to Store</button>
     </a>
 </div>

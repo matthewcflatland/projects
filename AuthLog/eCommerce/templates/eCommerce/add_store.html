@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Add Store</title>
+</head>
+<body>
+    <h1>Add Store</h1>
+
+    {% if error %}
+        <p style="color: red;">{{ error }}</p>
+    {% endif %}
+
+
+    <form method="POST">
+        {% csrf_token %}
+        <label for="store_name">Store Name:</label>
+        <input type="text" id="store_name" name="store_name" required /><br>
+        <button type="submit">Add Store</button>
+    </form>
+
+
+    <br>
+    <!-- Navigation Buttons -->
+    <div style="margin-top: 20px;">
+        <a href="{% url 'grabsomore:welcome' %}">
+            <button>Back Home</button>
+        </a>
+
+    </div>
+</body>
+</html>

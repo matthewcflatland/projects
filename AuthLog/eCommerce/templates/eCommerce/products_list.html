@@ -15,21 +15,30 @@
                     <th>Description</th>
                     <th>Price</th>
                     <th>Add to Cart</th>
+                    <th>Leave Review</th>
                 </tr>
             </thead>
             <tbody>
                 {% for product in products %}
                     <tr>
-                        <td>{{ product.name }}</td>
+                        <td><a href="{% url 'eCommerce:product_page' product.id %}">{{ product.name }}</a></td>
                         <td>{{ product.description }}</td>
-                        <td>R{{ product.price }}</td>
+                        <td>${{ product.price }}</td>
                         <td>
-                            <form method="POST" action="{% url 'eCommerce:add_to_cart' %}">
+                            {% if product.stock < 1 %}
+                                <p style="color:red;">Out of Stock</p>
+                            {% else %}
+                                <form method="POST" action="{% url 'eCommerce:add_to_cart' %}">
                                 {% csrf_token %}
                                 <input type="hidden" name="item" value="{{ product.name }}">
                                 <input type="number" name="quantity" value="1" min="1" style="width: 50px;" />
                                 <button type="submit">Add</button>
                             </form>
+                            {% endif %}
+                            
+                        </td>
+                        <td>
+                            <a href="{% url 'eCommerce:leave_review' product.id %}">Leave Review</a>
                         </td>
                     </tr>
                 {% endfor %}
@@ -46,12 +55,12 @@
             <button>🛒 View Cart</button>
         </a>
 
-        <a href="{% url 'eCommerce:product_page' %}">
+        <a href="{% url 'eCommerce:search_product' %}">
             <button>🔍 Search Product</button>
         </a>
 
-        <a href="{% url 'eCommerce:change_price' %}">
-            <button>💰 Change Price</button>
+        <a href="{% url 'eCommerce:order_history' %}">
+            <button>Order History</button>
         </a>
 
         <form method="POST" action="{% url 'eCommerce:clear_cart' %}" style="display:inline;">

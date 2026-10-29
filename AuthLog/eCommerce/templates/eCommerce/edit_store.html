@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Store</title>
+</head>
+<body>
+    <h1>Edit Store</h1>
+
+    {% if stores %}
+        <table border="1" cellpadding="10" cellspacing="0">
+                {% for store in stores %}
+                    <tr>
+                        <td>{{ store.name }}</td>
+                        <td>
+                            <a href="{% url 'eCommerce:vendor_store' store_id=store.id %}">
+                                <button>View Store</button>
+                            </a>
+                    </tr>
+                {% endfor %}
+        </table>
+    {% else %}
+        <p>No stores available.</p>
+    {% endif %}
+
+    <br>
+
+    <!-- Navigation Buttons -->
+    <div style="margin-top: 20px;">
+        <a href="{% url 'eCommerce:add_store' %}">
+            <button>💰 Add store</button>
+        </a>
+    </div>
+
+    <div style="margin-top: 20px;">
+        <a href="{% url 'grabsomore:welcome' %}">
+            <button>Back Home</button>
+        </a>
+    </div>
+    
+</body>
+</html>

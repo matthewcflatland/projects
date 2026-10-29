@@ -14,7 +14,7 @@
     {% if product %}
         <h2>{{ product.name }}</h2>
         <p><strong>Description:</strong> {{ product.description }}</p>
-        <p><strong>Price:</strong> R{{ product.price }}</p>
+        <p><strong>Price:</strong> ${{ product.price }}</p>
         <p><strong>Stock:</strong> {{ product.stock }}</p>
     {% else %}
         <form method="POST">
@@ -24,6 +24,53 @@
             <button type="submit">View Product</button>
         </form>
     {% endif %}
+    
+    <br>
+    <h3>Reviews</h3>
+    {% if reviews %}
+        
+        <table border="1" cellpadding="10" cellspacing="0">
+            
+                <thead>
+
+                
+                    <tr>
+                        <th>User</th>
+                        <th>Rating</th>
+                        <th>Comment</th>
+                        <th>Verification</th>
+                    </tr>
+
+                </thead>
+            {% for review in reviews %}
+                <tr>
+                    <td>{{ review.user }}: </td>
+                    {% if review.rating == 1 %}
+                        <td>⭐</td> 
+                    {% elif review.rating == 2 %}
+                        <td>⭐⭐</td>
+                    {% elif review.rating == 3 %}
+                        <td>⭐⭐⭐</td>
+                    {% elif review.rating == 4 %}
+                        <td>⭐⭐⭐⭐</td>
+                    {% elif review.rating == 5 %}
+                        <td>⭐⭐⭐⭐⭐</td>
+                    {% endif %}
+                    <td>{{ review.comment }}</td>
+                    <td>
+                        {% if review.verified %}
+                            <span>Verified Purchase</span>
+                        {% else %}
+                            <span>Unverified Purchase</span>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <p>No reviews yet.</p>
+    {% endif %}
+    
 
     <br>
     <!-- Navigation Buttons -->
@@ -36,9 +83,6 @@
             <button>🛒 View Cart</button>
         </a>
 
-        <a href="{% url 'eCommerce:change_price' %}">
-            <button>💰 Change Price</button>
-        </a>
     </div>
 </body>
 </html>

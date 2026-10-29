@@ -23,21 +23,27 @@
                     <tr>
                         <td>{{ item.product.name }}</td>
                         <td>{{ item.product.description }}</td>
-                        <td>R{{ item.product.price }}</td>
+                        <td>${{ item.product.price }}</td>
                         <td>{{ item.quantity }}</td>
-                        <td>R{{ item.subtotal }}</td>
+                        <td>${{ item.subtotal }}</td>
                     </tr>
                 {% endfor %}
             </tbody>
         </table>
 
         <p><strong>Total Items:</strong> {{ cart|length }}</p>
-        <p><strong>Total Price:</strong> R{{ total_price }}</p>
+        <p><strong>Total Price:</strong> ${{ total_price }}</p>
     {% else %}
         <p>Your cart is empty.</p>
     {% endif %}
 
-    
+    <br>
+    <div style="margin-top: 20px;">
+        <a href="{% url 'eCommerce:checkout' %}">
+            <button>💳 Checkout</button>
+        </a>
+    </div>
+
     <br>
     <!-- Navigation Buttons -->
     <div style="margin-top: 20px;">
@@ -45,12 +51,8 @@
             <button>🏪 Continue Shopping</button>
         </a>
 
-        <a href="{% url 'eCommerce:product_page' %}">
+        <a href="{% url 'eCommerce:search_product' %}">
             <button>🔍 Search Product</button>
-        </a>
-
-        <a href="{% url 'eCommerce:change_price' %}">
-            <button>💰 Change Price</button>
         </a>
 
         <form method="POST" action="{% url 'eCommerce:clear_cart' %}" style="display:inline;">

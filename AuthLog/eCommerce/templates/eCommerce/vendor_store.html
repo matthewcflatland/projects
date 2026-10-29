@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ store.name }}</title>
+</head>
+<body>
+    <h1>{{ store.name }}</h1>
+
+    {% if products %}
+        <table border="1" cellpadding="10" cellspacing="0">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Price</th>
+                    <th>Add to Cart</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in products %}
+                    <tr>
+                        <td>{{ product.name }}</td>
+                        <td>{{ product.description }}</td>
+                        <td>${{ product.price }}</td>
+                        <td>
+                            <a href="{% url 'eCommerce:product_detail' product_id=product.id %}">
+                                <button>Edit Product</button>
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No products available.</p>
+    {% endif %}
+
+    <br>
+    <!-- Navigation Buttons -->
+    <div style="margin-top: 20px;">
+        <a href="{% url 'eCommerce:add_product' store_id=store.id %}">
+            <button>💰 Add Product</button>
+        </a>
+
+        <a href="{% url 'eCommerce:edit_store' %}">
+            <button>🏪 Back</button>
+        </a>
+
+        <a href="{% url 'eCommerce:change_store_name' store_id=store.id %}">
+            <button>✏️ Change Store Name</button>
+
+        <a href="{% url 'eCommerce:delete_store' store_id=store.id %}">
+            <button>�️ Delete Store</button>
+        </a>
+    </div>
+
+    <div style="margin-top: 20px;">
+        <a href="{% url 'grabsomore:welcome' %}">
+            <button>Back Home</button>
+        </a>
+    </div>
+    
+</body>
+</html>
