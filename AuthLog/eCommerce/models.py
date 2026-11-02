@@ -53,6 +53,8 @@ class Review(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     # The date and time when the review was created; set automatically when the review is first created
 
+    verified = models.BooleanField(default=False)
+
     def __str__(self):
         # This makes it easier to see a summary of the review when printing or in admin pages
         return (f"Review for {self.product.name} by {self.user.username}\n"

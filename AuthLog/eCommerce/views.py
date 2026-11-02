@@ -4,6 +4,8 @@ from django.urls import reverse
 from django.core.exceptions import ObjectDoesNotExist
 from .models import OrderItem, Product, Store, Review, Order
 from datetime import datetime
+from .utils import build_email
+from django.core.mail import send_mail
 
 
 def leave_review(request, product_id):
@@ -17,11 +19,19 @@ def leave_review(request, product_id):
             if rating and comment:
                 try:
                     product = Product.objects.get(id=product_id)
+                    verified = False  # Set the review as unverified initially
+                    temp = Order.objects.filter(user=user)
+                    for order in temp:
+                        if order.products.filter(id=product_id).exists():
+                            verified = True
+                            break
+
                     review = Review.objects.create(
                         user=user,
                         product=product,
                         rating=rating,
-                        comment=comment
+                        comment=comment,
+                        verified=verified
                     )
 
                     
@@ -168,6 +178,10 @@ def checkout(request):
     for item in cart_items:
         OrderItem.objects.create(
             order=order, product=item["product"], quantity=item["quantity"])
+        Product.objects.filter(id=item["product"].id).update(stock=item["product"].stock - item["quantity"])
+
+    email = build_email(user, order, cart_items)
+    email.send()  # Send the order confirmation email
 
     clear_cart(request)  # Clear the cart after checkout
 
@@ -346,9 +360,10 @@ def search_product_page(request):
             try:
                 # Try to find the product in the database by its name
                 product = Product.objects.get(name=product_name)
+                reviews = Review.objects.filter(product=product)
                 # Show product details on the page
                 return render(
-                    request, "eCommerce/search_product.html", {"product": product}
+                    request, "eCommerce/search_product.html", {"product": product, "reviews": reviews}
                 )
             except ObjectDoesNotExist:
                 # If product not found, show error on page

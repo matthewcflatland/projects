@@ -18,7 +18,7 @@ urlpatterns = [
     path("request-password-reset/", views.send_password_reset, name="request_password_reset"),
     # Page users visit from the email link to enter a new password
     # The token in the URL is used to verify the password reset request
-    path("reset/<str:token>/", views.reset_user_password, name="password_reset_form"),
+    path("grabsomore/reset/<str:token>/", views.reset_user_password, name="password_reset_form"),
     # Handles the form submission to actually change the password (POST request)
     path("reset_password/", views.reset_password, name="reset_password"),
 ]

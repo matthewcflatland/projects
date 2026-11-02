@@ -234,8 +234,8 @@ def reset_user_password(request, token):
 # Handles the password reset form submission (when user enters new password)
 def reset_password(request):
     if request.method == "POST":
-        username = request.session.get("user")
-        token = request.session.get("token")
+        username = request.session.get("user_id")
+        token = request.session.get("reset_token")
         password = request.POST.get("password")
         password_conf = request.POST.get("password_conf")
 
@@ -243,7 +243,7 @@ def reset_password(request):
         if not all([username, token, password, password_conf]):
             return render(
                 request,
-                "password_reset.html",
+                "grabsomore/password_reset.html",
                 {"error": "Missing fields or session expired.", "token": token},
             )
 
@@ -251,12 +251,12 @@ def reset_password(request):
         if password != password_conf:
             return render(
                 request,
-                "password_reset.html",
+                "grabsomore/password_reset.html",
                 {"error": "Passwords do not match.", "token": token},
             )
 
         try:
-            user = User.objects.get(username=username)  # Find user by username
+            user = User.objects.get(id=username)  # Find user by ID
             hashed_token = sha1(token.encode()).hexdigest()
             reset_token = ResetToken.objects.get(token=hashed_token)
 
