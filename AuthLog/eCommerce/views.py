@@ -309,7 +309,7 @@ def edit_store(request):
     else:
         return render(
             request,
-            "eCommerce/edit_store.html",
+            "grabsomore/welcome.html",
             {"error": "You do not have permission to edit stores."},
         )
 
@@ -320,6 +320,7 @@ def product_detail(request, product_id):
     if user.has_perm("eCommerce.change_product"):
         try:
             product = Product.objects.get(id=product_id)  # Get the product with the specified ID
+            reviews = Review.objects.filter(product=product)
         except Product.DoesNotExist:
             return render(
                 request,
@@ -327,7 +328,7 @@ def product_detail(request, product_id):
                 {"error": "Product not found."},
             )
 
-        return render(request, "eCommerce/product_detail.html", {"product": product})
+        return render(request, "eCommerce/product_detail.html", {"product": product, "reviews": reviews})
 
     else:
         return render(
@@ -482,21 +483,28 @@ def change_product_price(request, product_id):
         "eCommerce.change_products"
     ):
         if request.method == "POST":
+            new_name = request.POST.get("new_name")  # Get new name from form
+            new_description = request.POST.get("new_description")  # Get new description from form
             new_price = request.POST.get("new_price")  # Get new price from form
+            new_stock = request.POST.get("new_stock")  # Get new stock from form
 
-            # Check if the new price is provided
+            if not new_name:
+                new_name = product.name  # If no new name provided, keep existing name
+            if not new_description:
+                new_description = product.description  # If no new description provided, keep existing description
             if not new_price:
-                return render(
-                    request,
-                    "eCommerce/change_price.html",
-                    {"error": "Please provide a new price."},
-                )
+                new_price = product.price  # If no new price provided, keep existing price
+            if not new_stock:
+                new_stock = product.stock  # If no new stock provided, keep existing stock
 
             try:
 
                 # Convert new price to float (decimal number)
                 product.price = float(new_price)
-                product.save()  # Save updated product price to database
+                product.name = new_name
+                product.description = new_description
+                product.stock = int(new_stock)
+                product.save()  # Save updated product details to database
 
                 # After success, redirect user to product page
                 return HttpResponseRedirect(reverse("eCommerce:product_detail", args=[product_id]))

@@ -6,6 +6,10 @@
 </head>
 <body>
     <h1>Product Catalog</h1>
+    
+    {% if error %}
+        <p style="color: red;">{{ error }}</p>
+    {% endif %}
 
     {% if products %}
         <table border="1" cellpadding="10" cellspacing="0">
@@ -60,7 +64,7 @@
         </a>
 
         <a href="{% url 'eCommerce:order_history' %}">
-            <button>Order History</button>
+            <button>📋 Order History</button>
         </a>
 
         <form method="POST" action="{% url 'eCommerce:clear_cart' %}" style="display:inline;">
@@ -71,7 +75,7 @@
 
     <div style="margin-top: 20px;">
         <a href="{% url 'grabsomore:welcome' %}">
-            <button>Back Home</button>
+            <button>⬅️ Back Home</button>
         </a>
     </div>
     

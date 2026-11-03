@@ -8,6 +8,10 @@
 <body>
     <h1>Order History</h1>
 
+    {% if error %}
+        <p style="color: red;">{{ error }}</p>
+    {% endif %} 
+
     {% if orders %}
         <table border="1" cellpadding="10" cellspacing="0">
             <thead>
@@ -47,11 +51,11 @@
         <a href="{% url 'eCommerce:products_list' %}">
             <button>🏪 Continue Shopping</button>
         </a>
-
-        <a href="{% url 'grabsomore:welcome' %}">
-            <button>Back Home</button>
-        </a>
     </div>
-
+    
+    <br>
+    <a href="{% url 'grabsomore:welcome' %}">
+        <button>⬅️ Back Home</button>
+    </a>
 </body>
 </html>

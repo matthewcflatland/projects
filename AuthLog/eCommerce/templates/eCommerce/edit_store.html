@@ -7,6 +7,10 @@
 <body>
     <h1>Edit Store</h1>
 
+    {% if error %}
+        <p style="color: red;">{{ error }}</p>
+    {% endif %} 
+
     {% if stores %}
         <table border="1" cellpadding="10" cellspacing="0">
                 {% for store in stores %}
@@ -28,13 +32,13 @@
     <!-- Navigation Buttons -->
     <div style="margin-top: 20px;">
         <a href="{% url 'eCommerce:add_store' %}">
-            <button>💰 Add store</button>
+            <button>➕ Add store</button>
         </a>
     </div>
 
     <div style="margin-top: 20px;">
         <a href="{% url 'grabsomore:welcome' %}">
-            <button>Back Home</button>
+            <button>⬅️ Back Home</button>
         </a>
     </div>
     

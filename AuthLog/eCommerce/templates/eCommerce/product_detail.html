@@ -18,20 +18,65 @@
     <p><strong>Stock:</strong> {{ product.stock }}</p>
     <p><strong>Store:</strong> {{ product.store.name }}</p>
 
+    <h3>Reviews</h3>
+    {% if reviews %}
+        
+        <table border="1" cellpadding="10" cellspacing="0">
+            
+                <thead>
+
+                
+                    <tr>
+                        <th>User</th>
+                        <th>Rating</th>
+                        <th>Comment</th>
+                        <th>Verification</th>
+                    </tr>
+
+                </thead>
+            {% for review in reviews %}
+                <tr>
+                    <td>{{ review.user }}: </td>
+                    {% if review.rating == 1 %}
+                        <td>⭐</td> 
+                    {% elif review.rating == 2 %}
+                        <td>⭐⭐</td>
+                    {% elif review.rating == 3 %}
+                        <td>⭐⭐⭐</td>
+                    {% elif review.rating == 4 %}
+                        <td>⭐⭐⭐⭐</td>
+                    {% elif review.rating == 5 %}
+                        <td>⭐⭐⭐⭐⭐</td>
+                    {% endif %}
+                    <td>{{ review.comment }}</td>
+                    <td>
+                        {% if review.verified %}
+                            <span>Verified Purchase</span>
+                        {% else %}
+                            <span>Unverified Purchase</span>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <p>No reviews yet.</p>
+    {% endif %}
+
 
     <br>
     <!-- Navigation Buttons -->
     <div style="margin-top: 20px;">
         <a href="{% url 'eCommerce:vendor_store' store_id=product.store.id %}">
-            <button>🏪 Back to Store</button>
+            <button>⬅️ Back to Store</button>
         </a>
 
         <a href="{% url 'eCommerce:change_price' product_id=product.id %}">
-            <button>💰 Change Price</button>
+            <button>✏️ Edit Product</button>
         </a>
 
         <a href="{% url 'eCommerce:delete_product' product_id=product.id %}">
-            <button>💰 Delete Product</button>
+            <button>❌ Delete Product</button>
         </a>
     </div>
 </body>

@@ -7,6 +7,10 @@
 <body>
     <h1>Your Shopping Cart</h1>
 
+    {% if error %}
+        <p style="color: red;">{{ error }}</p>
+    {% endif %} 
+
     {% if cart %}
         <table border="1" cellpadding="10" cellspacing="0">
             <thead>

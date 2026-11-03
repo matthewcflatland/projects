@@ -9,6 +9,10 @@
 
     <p>You are now logged in.</p>
 
+    {% if error %}
+        <p style="color: red;">{{ error }}</p>
+    {% endif %}
+
     <!-- This form logs the user out -->
     <form method="POST" action="{% url 'grabsomore:logout' %}">
         {% csrf_token %}
@@ -19,13 +23,10 @@
     <div style="margin-top: 20px;">
         <p>Need to Shop ?
             <a href="{% url 'eCommerce:products_list' %}">
-                <button>Go to Store</button>
+                <button>🏪 Go to Store</button>
             </a>
             <a href="{% url 'eCommerce:edit_store' %}">
-                <button>Edit Store</button>
-            </a>
-            <a href="{% url 'eCommerce:products_list' %}">
-                <button>Wallet</button>
+                <button>✏️ Edit Store</button>
             </a>
         </p>
     </div>

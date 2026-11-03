@@ -23,7 +23,7 @@ urlpatterns = [
     # URL to edit store
     path("edit-store/", views.edit_store, name="edit_store"),
     # URL to view product details
-    path("product/<int:product_id>/", views.product_detail, name="product_detail"),
+    path("product-details/<int:product_id>/", views.product_detail, name="product_detail"),
     # URL to delete a product
     path("delete-product/<int:product_id>/", views.delete_product, name="delete_product"),
     # URL to add a new product

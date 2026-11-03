@@ -4,9 +4,15 @@
     <meta charset="UTF-8">
     <title>Change Store Name</title>
 </head>
+
+
+
 <body>
     <h1>Change Store Name</h1>
     <h2>Current Store Name: {{ store.name }}</h2>
+    {% if error %}
+        <p style="color: red;">{{ error }}</p>
+    {% endif %}
 
     <form method="POST" action="{% url 'eCommerce:change_store_name' store_id=store.id %}">
         {% csrf_token %}
