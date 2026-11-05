@@ -1,0 +1,19 @@
+1 wasn't clear how to navigate to add/edit store ✅
+
+2. set up permissions programmatically. ✅
+
+3. look at task requriment make case diagaram
+	test each use case:
+	starting with registration, store, and product management
+
+4. pep8 formatting ✅
+
+5. add docstrings to classes, vies and helper functions
+
+6. extract sensitive settings such as SECRET_KEY and your email credintials into environment variables loaded from 	a .env file. check out python-dotenv or Django-environ
+
+7. Add a detailed README.md file at the root of project repository
+
+8. add custom css or front end framework such as bootstrap
+
+	

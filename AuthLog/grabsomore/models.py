@@ -4,7 +4,9 @@ from django.conf import settings
 
 class ResetToken(models.Model):
     # Reference to the user who requested the password reset
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE
+    )
     # Token string, unique to avoid duplicates
     token = models.CharField(max_length=255, unique=True)
     # When this token expires

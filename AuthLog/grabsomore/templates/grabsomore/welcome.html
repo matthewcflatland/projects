@@ -23,11 +23,13 @@
     <div style="margin-top: 20px;">
         <p>Need to Shop ?
             <a href="{% url 'eCommerce:products_list' %}">
-                <button>🏪 Go to Store</button>
+                <button>📋 View Catalog</button>
             </a>
+            {% if user_group.name == "Vendors" %}
             <a href="{% url 'eCommerce:edit_store' %}">
-                <button>✏️ Edit Store</button>
+                <button>🏪 Manage Stores</button>
             </a>
+            {% endif %}
         </p>
     </div>
 </body>

@@ -1,4 +1,7 @@
-from django.shortcuts import render, redirect  # To show HTML pages and redirect users
+from django.shortcuts import (
+    render,
+    redirect,
+)  # To show HTML pages and redirect users
 from django.contrib.auth.models import (
     User,
     Group,
@@ -21,18 +24,24 @@ from datetime import datetime
 import secrets  # For generating secure random tokens
 from datetime import timedelta
 from hashlib import sha1  # To hash tokens securely
-from django.utils import timezone  # Better way to handle dates and times in Django
+from django.utils import (
+    timezone,
+)  # Better way to handle dates and times in Django
 from django.core.exceptions import (
     ObjectDoesNotExist,
 )  # For handling cases when an object is not found
 from .utils import (
+    create_shopper,
     generate_reset_url,
     build_email,
+    create_vendor,
 )  # Helper functions for email and token generation
 from .models import ResetToken  # Our custom model to store reset tokens
 
 from django.core.mail import EmailMessage  # To send emails
-from django.contrib.auth.hashers import make_password  # To hash passwords before saving
+from django.contrib.auth.hashers import (
+    make_password,
+)  # To hash passwords before saving
 
 
 # This function handles user login
@@ -67,7 +76,9 @@ def login_user(request):
         else:
             # If login failed, reload login page with an error message
             return render(
-                request, "grabsomore/login.html", {"error": "Invalid credentials"}
+                request,
+                "grabsomore/login.html",
+                {"error": "Invalid credentials"},
             )
 
     # If the user just opened the login page, show the login form
@@ -81,7 +92,9 @@ def register_user(request):
         username = request.POST.get("username")
         password = request.POST.get("password")
         email = request.POST.get("email")
-        account_type = request.POST.get("account_type")  # Get account type (shopper/vendor)
+        account_type = request.POST.get(
+            "account_type"
+        )  # Get account type (shopper/vendor)
 
         # Create a new user in the database
         user = User.objects.create_user(
@@ -90,19 +103,20 @@ def register_user(request):
 
         if account_type == "vendor":
             # Try to add the new user to the 'Vendors' group (if it exists)
-            try:
-                vendors_group = Group.objects.get(name="Vendors")
-                user.groups.add(vendors_group)
-            except Group.DoesNotExist:
-                pass  # If group doesn't exist, just ignore
+            vendors_group = (
+                create_vendor()
+            )  # Create the group if it doesn't exist
+            user.groups.add(vendors_group)
+
+        elif account_type == "shopper":
+            # Try to add the new user to the 'Shoppers' group (if it exists)
+            shoppers_group = (
+                create_shopper()
+            )  # Create the group if it doesn't exist
+            user.groups.add(shoppers_group)
 
         else:
-            # Try to add the new user to the 'Shoppers' group (if it exists)
-            try:
-                shoppers_group = Group.objects.get(name="Shoppers")
-                user.groups.add(shoppers_group)
-            except Group.DoesNotExist:
-                pass  # If group doesn't exist, just ignore
+            pass  # If account type is invalid, do nothing (or handle error)
 
         # Try to give the user permission to view products (fallback)
         try:
@@ -128,7 +142,9 @@ def register_user(request):
 def change_user_password(username, new_password):
     user = User.objects.get(username=username)  # Find user by username
 
-    user.set_password(new_password)  # Set the new password (hashed automatically)
+    user.set_password(
+        new_password
+    )  # Set the new password (hashed automatically)
 
     user.save()  # Save changes to the database
 
@@ -143,14 +159,24 @@ def logout_user(request):
 # Only logged-in users can see the welcome page
 @login_required(login_url=reverse_lazy("grabsomore:login"))
 def welcome(request):
-    return render(request, "grabsomore/welcome.html")  # Show the welcome page
+    user = request.user  # Get the currently logged-in user
+    user_group = (
+        user.groups.first()
+    )  # Get the first group the user belongs to (if any)
+    return render(
+        request,
+        "grabsomore/welcome.html",
+        {"user": user, "user_group": user_group},
+    )  # Show the welcome page
 
 
 # Creates the email object to send for password reset
 def build_email(user, reset_url):
     subject = "Password Reset"
     user_email = user.email
-    domain_email = "presasantest@gmail.com"  # The "from" email address for the email
+    domain_email = (
+        "presasantest@gmail.com"  # The "from" email address for the email
+    )
     body = f"Hi {user.username},\nHere is your link to reset your password: {reset_url}"
 
     email = EmailMessage(subject, body, domain_email, [user_email])
@@ -165,18 +191,20 @@ def generate_reset_url(user):
 
     token = secrets.token_urlsafe(16)  # Generate a random secure token
 
-    expiry_date = timezone.now() + timedelta(minutes=5)  # Token expires in 5 minutes
+    expiry_date = timezone.now() + timedelta(
+        minutes=5
+    )  # Token expires in 5 minutes
 
-    hashed_token = sha1(token.encode()).hexdigest()  # Hash the token to store securely
+    hashed_token = sha1(
+        token.encode()
+    ).hexdigest()  # Hash the token to store securely
 
     # Save the hashed token and expiry date to the database
     reset_token = ResetToken.objects.create(
         user=user, token=hashed_token, expiry_date=expiry_date
     )
 
-    url += (
-        f"{token}/"  # Add the raw token (not hashed) to the URL for verification later
-    )
+    url += f"{token}/"  # Add the raw token (not hashed) to the URL for verification later
     return url
 
 
@@ -186,19 +214,25 @@ def send_password_reset(request):
         user_email = request.POST.get("email")
         try:
             user = User.objects.get(email=user_email)  # Find user by email
-            reset_url = generate_reset_url(user)  # Generate reset link with token
+            reset_url = generate_reset_url(
+                user
+            )  # Generate reset link with token
             email = build_email(user, reset_url)  # Create the email message
             email.send()  # Send the email
 
             # Show a confirmation page that email was sent
             return render(
-                request, "grabsomore/reset_email_sent.html", {"email": user_email}
+                request,
+                "grabsomore/reset_email_sent.html",
+                {"email": user_email},
             )
 
         except ObjectDoesNotExist:
             # Even if no user found, still show confirmation (to avoid info leaks)
             return render(
-                request, "grabsomore/reset_email_sent.html", {"email": user_email}
+                request,
+                "grabsomore/reset_email_sent.html",
+                {"email": user_email},
             )
 
     # Show the form where user can enter their email
@@ -210,7 +244,9 @@ def reset_user_password(request, token):
     hashed_token = sha1(token.encode()).hexdigest()  # Hash the token from URL
 
     try:
-        user_token = ResetToken.objects.get(token=hashed_token)  # Look for token in DB
+        user_token = ResetToken.objects.get(
+            token=hashed_token
+        )  # Look for token in DB
 
         # Check if the token expired
         if user_token.expiry_date.replace(tzinfo=None) < datetime.now():
@@ -224,7 +260,9 @@ def reset_user_password(request, token):
         request.session["reset_token"] = token
 
         # Show the password reset form
-        return render(request, "grabsomore/password_reset.html", {"token": token})
+        return render(
+            request, "grabsomore/password_reset.html", {"token": token}
+        )
 
     except ResetToken.DoesNotExist:
         # Token not found or already used
@@ -244,7 +282,10 @@ def reset_password(request):
             return render(
                 request,
                 "grabsomore/password_reset.html",
-                {"error": "Missing fields or session expired.", "token": token},
+                {
+                    "error": "Missing fields or session expired.",
+                    "token": token,
+                },
             )
 
         # Check if passwords match

@@ -8,7 +8,9 @@ def build_email(user, order, cart_items):
     body = f"Hello {user.username},\n\nYour order #{order.id} has been placed successfully.\n\n"
     for item in cart_items:
         body += f"{item['product'].name} x {item['quantity']}\t${item['product'].price * item['quantity']}\n"
-    body += f"\nSubtotal: ${order.total_price}\n\nThank you for shopping with us!"
+    body += (
+        f"\nSubtotal: ${order.total_price}\n\nThank you for shopping with us!"
+    )
 
     # Create the email object, setting the recipient to the user's email address
     email = EmailMessage(subject, body, to=[user.email])

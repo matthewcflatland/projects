@@ -2,10 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Edit Store</title>
+    <title>Manage Stores</title>
 </head>
 <body>
-    <h1>Edit Store</h1>
+    <h1>Manage Stores</h1>
 
     {% if error %}
         <p style="color: red;">{{ error }}</p>
@@ -18,7 +18,7 @@
                         <td>{{ store.name }}</td>
                         <td>
                             <a href="{% url 'eCommerce:vendor_store' store_id=store.id %}">
-                                <button>View Store</button>
+                                <button>Edit Store</button>
                             </a>
                     </tr>
                 {% endfor %}

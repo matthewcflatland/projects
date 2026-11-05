@@ -31,11 +31,12 @@ def leave_review(request, product_id):
                         product=product,
                         rating=rating,
                         comment=comment,
-                        verified=verified
+                        verified=verified,
                     )
 
-                    
-                    return redirect(reverse("eCommerce:product_page", args=[product_id]))
+                    return redirect(
+                        reverse("eCommerce:product_page", args=[product_id])
+                    )
                 except Product.DoesNotExist:
                     return render(
                         request,
@@ -58,12 +59,14 @@ def leave_review(request, product_id):
             request,
             "eCommerce/products_list.html",
             {"error": "You do not have permission to leave reviews."},
-        )    
+        )
 
 
 def product_page(request, product_id):
     try:
-        product = Product.objects.get(id=product_id)  # Get the product with the specified ID
+        product = Product.objects.get(
+            id=product_id
+        )  # Get the product with the specified ID
         reviews = Review.objects.filter(product=product)
     except Product.DoesNotExist:
         return render(
@@ -72,9 +75,11 @@ def product_page(request, product_id):
             {"error": "Product not found."},
         )
 
-
-
-    return render(request, "eCommerce/product_page.html", {"product": product, "reviews": reviews})
+    return render(
+        request,
+        "eCommerce/product_page.html",
+        {"product": product, "reviews": reviews},
+    )
 
 
 def change_store_name(request, store_id):
@@ -83,7 +88,9 @@ def change_store_name(request, store_id):
     # Check if user has permission to change stores
     if user.has_perm("eCommerce.change_store"):
         try:
-            store = Store.objects.get(id=store_id)  # Get the store with the specified ID
+            store = Store.objects.get(
+                id=store_id
+            )  # Get the store with the specified ID
         except Store.DoesNotExist:
             return render(
                 request,
@@ -92,7 +99,9 @@ def change_store_name(request, store_id):
             )
 
         if request.method == "POST":
-            new_name = request.POST.get("store_name")  # Get new name from form submission
+            new_name = request.POST.get(
+                "store_name"
+            )  # Get new name from form submission
 
             # Validate that new name is provided
             if not new_name:
@@ -104,10 +113,14 @@ def change_store_name(request, store_id):
 
             store.name = new_name  # Update the store's name
             store.save()  # Save changes to the database
-            return redirect(reverse("eCommerce:edit_store"))  # Redirect to edit store page after change
+            return redirect(
+                reverse("eCommerce:edit_store")
+            )  # Redirect to edit store page after change
 
         # Show form when page is first loaded (GET request)
-        return render(request, "eCommerce/change_store_name.html", {"store": store})
+        return render(
+            request, "eCommerce/change_store_name.html", {"store": store}
+        )
 
     else:
         return render(
@@ -123,9 +136,13 @@ def delete_store(request, store_id):
     # Check if user has permission to delete stores
     if user.has_perm("eCommerce.delete_store"):
         try:
-            store = Store.objects.get(id=store_id)  # Get the store with the specified ID
+            store = Store.objects.get(
+                id=store_id
+            )  # Get the store with the specified ID
             store.delete()  # Delete the store from the database
-            return redirect(reverse("eCommerce:edit_store"))  # Redirect to edit store page after deletion
+            return redirect(
+                reverse("eCommerce:edit_store")
+            )  # Redirect to edit store page after deletion
         except Store.DoesNotExist:
             return render(
                 request,
@@ -145,11 +162,19 @@ def view_order_history(request):
 
     # Check if user has permission to view orders
     if user.has_perm("eCommerce.view_order"):
-        orders = Order.objects.filter(user=user.id)  # Get all orders for the user
+        orders = Order.objects.filter(
+            user=user.id
+        )  # Get all orders for the user
 
-        items = OrderItem.objects.filter(order__in=orders)  # Get all items for the user's orders
+        items = OrderItem.objects.filter(
+            order__in=orders
+        )  # Get all items for the user's orders
 
-        return render(request, "eCommerce/order_history.html", {"orders": orders, "items": items})
+        return render(
+            request,
+            "eCommerce/order_history.html",
+            {"orders": orders, "items": items},
+        )
 
     else:
         return render(
@@ -173,12 +198,16 @@ def checkout(request):
     current_datetime = datetime.now()
 
     order = Order.objects.create(
-        user=user, total_price=subtotal, created_at=current_datetime)
+        user=user, total_price=subtotal, created_at=current_datetime
+    )
 
     for item in cart_items:
         OrderItem.objects.create(
-            order=order, product=item["product"], quantity=item["quantity"])
-        Product.objects.filter(id=item["product"].id).update(stock=item["product"].stock - item["quantity"])
+            order=order, product=item["product"], quantity=item["quantity"]
+        )
+        Product.objects.filter(id=item["product"].id).update(
+            stock=item["product"].stock - item["quantity"]
+        )
 
     email = build_email(user, order, cart_items)
     email.send()  # Send the order confirmation email
@@ -186,7 +215,9 @@ def checkout(request):
     clear_cart(request)  # Clear the cart after checkout
 
     # Render the checkout page with the current date and time
-    return view_order_history(request)  # Redirect to order history after checkout
+    return view_order_history(
+        request
+    )  # Redirect to order history after checkout
 
 
 def add_store(request):
@@ -222,7 +253,9 @@ def add_store(request):
 
 def add_product(request, store_id):
     user = request.user  # Get the currently logged-in user
-    store = Store.objects.get(id=store_id)  # Get the store with the specified ID
+    store = Store.objects.get(
+        id=store_id
+    )  # Get the store with the specified ID
 
     # Check if user has permission to add products
     if user.has_perm("eCommerce.add_product"):
@@ -249,7 +282,9 @@ def add_product(request, store_id):
                     stock=int(stock),
                     store=Store.objects.get(id=store_id),
                 )
-                return redirect(reverse("eCommerce:vendor_store", args=[store_id]))
+                return redirect(
+                    reverse("eCommerce:vendor_store", args=[store_id])
+                )
             except ValueError:
                 return render(
                     request,
@@ -274,10 +309,14 @@ def delete_product(request, product_id):
     # Check if user has permission to delete products
     if user.has_perm("eCommerce.delete_product"):
         try:
-            product = Product.objects.get(id=product_id)  # Get the product with the specified ID
+            product = Product.objects.get(
+                id=product_id
+            )  # Get the product with the specified ID
             id = product.id  # Store the product ID for redirection
             product.delete()  # Delete the product from the database
-            return redirect(reverse("eCommerce:vendor_store", kwargs={"store_id": id}))  # Redirect to vendor store after deletion
+            return redirect(
+                reverse("eCommerce:vendor_store", kwargs={"store_id": id})
+            )  # Redirect to vendor store after deletion
         except Product.DoesNotExist:
             return render(
                 request,
@@ -294,9 +333,15 @@ def delete_product(request, product_id):
 
 def show_vendor_store(request, store_id):
 
-    store = Store.objects.get(id=store_id)  # Get the store with the specified ID
+    store = Store.objects.get(
+        id=store_id
+    )  # Get the store with the specified ID
     products = store.products.all()  # Get all products in the store
-    return render(request, "eCommerce/vendor_store.html", {"store": store, "products": products})
+    return render(
+        request,
+        "eCommerce/vendor_store.html",
+        {"store": store, "products": products},
+    )
 
 
 def edit_store(request):
@@ -310,7 +355,7 @@ def edit_store(request):
         return render(
             request,
             "grabsomore/welcome.html",
-            {"error": "You do not have permission to edit stores."},
+            {"error": "You do not have permission to manage stores."},
         )
 
 
@@ -319,7 +364,9 @@ def product_detail(request, product_id):
 
     if user.has_perm("eCommerce.change_product"):
         try:
-            product = Product.objects.get(id=product_id)  # Get the product with the specified ID
+            product = Product.objects.get(
+                id=product_id
+            )  # Get the product with the specified ID
             reviews = Review.objects.filter(product=product)
         except Product.DoesNotExist:
             return render(
@@ -328,7 +375,11 @@ def product_detail(request, product_id):
                 {"error": "Product not found."},
             )
 
-        return render(request, "eCommerce/product_detail.html", {"product": product, "reviews": reviews})
+        return render(
+            request,
+            "eCommerce/product_detail.html",
+            {"product": product, "reviews": reviews},
+        )
 
     else:
         return render(
@@ -364,7 +415,9 @@ def search_product_page(request):
                 reviews = Review.objects.filter(product=product)
                 # Show product details on the page
                 return render(
-                    request, "eCommerce/search_product.html", {"product": product, "reviews": reviews}
+                    request,
+                    "eCommerce/search_product.html",
+                    {"product": product, "reviews": reviews},
                 )
             except ObjectDoesNotExist:
                 # If product not found, show error on page
@@ -460,7 +513,9 @@ def list_products(request):
     # Get all products from database
     products = Product.objects.all()
     # Show products list page, passing products to template
-    return render(request, "eCommerce/products_list.html", {"products": products})
+    return render(
+        request, "eCommerce/products_list.html", {"products": products}
+    )
 
 
 def clear_cart(request):
@@ -484,18 +539,32 @@ def change_product_price(request, product_id):
     ):
         if request.method == "POST":
             new_name = request.POST.get("new_name")  # Get new name from form
-            new_description = request.POST.get("new_description")  # Get new description from form
-            new_price = request.POST.get("new_price")  # Get new price from form
-            new_stock = request.POST.get("new_stock")  # Get new stock from form
+            new_description = request.POST.get(
+                "new_description"
+            )  # Get new description from form
+            new_price = request.POST.get(
+                "new_price"
+            )  # Get new price from form
+            new_stock = request.POST.get(
+                "new_stock"
+            )  # Get new stock from form
 
             if not new_name:
-                new_name = product.name  # If no new name provided, keep existing name
+                new_name = (
+                    product.name
+                )  # If no new name provided, keep existing name
             if not new_description:
-                new_description = product.description  # If no new description provided, keep existing description
+                new_description = (
+                    product.description
+                )  # If no new description provided, keep existing description
             if not new_price:
-                new_price = product.price  # If no new price provided, keep existing price
+                new_price = (
+                    product.price
+                )  # If no new price provided, keep existing price
             if not new_stock:
-                new_stock = product.stock  # If no new stock provided, keep existing stock
+                new_stock = (
+                    product.stock
+                )  # If no new stock provided, keep existing stock
 
             try:
 
@@ -507,7 +576,9 @@ def change_product_price(request, product_id):
                 product.save()  # Save updated product details to database
 
                 # After success, redirect user to product page
-                return HttpResponseRedirect(reverse("eCommerce:product_detail", args=[product_id]))
+                return HttpResponseRedirect(
+                    reverse("eCommerce:product_detail", args=[product_id])
+                )
             except ValueError:
                 # If new price isn't a valid number, show error
                 return render(
@@ -524,7 +595,9 @@ def change_product_price(request, product_id):
                 )
 
         # Show form when page is first loaded (GET request)
-        return render(request, "eCommerce/change_price.html", {"product": product})
+        return render(
+            request, "eCommerce/change_price.html", {"product": product}
+        )
 
     # If user does not have permission, show error
     return render(
@@ -535,7 +608,9 @@ def change_product_price(request, product_id):
 
 
 def calculate_cart_total(request):
-    cart_items = retrieve_products(request)  # Get the products in the user's cart
+    cart_items = retrieve_products(
+        request
+    )  # Get the products in the user's cart
 
     total_price = 0  # Start total price at zero
 

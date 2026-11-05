@@ -8,12 +8,18 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 """
 
 from pathlib import Path
+from dotenv import load_dotenv
+import os
+
+load_dotenv()  # Load environment variables from a .env file if present
 
 # This sets the base directory of your project so you can refer to files easily
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key secret in production!
-SECRET_KEY = "django-insecure-56es-13q3og*-2i9l=#wwnj%^-yex#g6vxo-)bk2j!)7q$37$$"
+SECRET_KEY = (
+    os.getenv("SECRET_KEY")
+)
 
 # Debug mode means you see detailed error messages, only use in development
 DEBUG = True
@@ -71,8 +77,8 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",  # Use MySQL database engine
         "NAME": "ecommerce_db",  # Your database name
-        "USER": "root",  # Your database user
-        "PASSWORD": "deathtank",  # Your database password
+        "USER": os.getenv("DB_USER"),  # Your database user
+        "PASSWORD": os.getenv("DB_PASSWORD"),  # Your database password
         "HOST": "localhost",  # Database is hosted on your own machine
         "PORT": "3306",  # Default MySQL port (3306)
     }
@@ -110,12 +116,14 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # You can switch to console backend for testing emails in your terminal instead of sending real emails
 # EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
-EMAIL_BACKEND = (
-    "django.core.mail.backends.smtp.EmailBackend"  # Use SMTP server to send real emails
-)
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"  # Use SMTP server to send real emails
 EMAIL_FILE_PATH = "/emails/"  # Path to save emails if using file backend
 EMAIL_HOST = "smtp.gmail.com"  # Gmail SMTP server
 EMAIL_PORT = 587  # SMTP port for TLS
 EMAIL_USE_TLS = True  # Use TLS for security
-EMAIL_HOST_USER = "presasantest@gmail.com"  # Your email address used to send mails
-EMAIL_HOST_PASSWORD = "zzpr xkfz yadc rjbr"  # Your email password or app password
+EMAIL_HOST_USER = (
+    os.getenv("EMAIL_HOST_USER")  # Your email address used to send mails
+)
+EMAIL_HOST_PASSWORD = (
+    os.getenv("EMAIL_HOST_PASSWORD")  # Your email password or app password
+)

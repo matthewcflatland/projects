@@ -3,6 +3,11 @@ from hashlib import sha1  # Used to securely hash data (like tokens)
 from datetime import datetime, timedelta  # To handle dates and times
 from .models import ResetToken  # Our model to store password reset tokens
 from django.urls import reverse  # To get URL from named paths
+from django.contrib.auth.models import (
+    User,
+    Group,
+    Permission,
+)  # Django's built-in user, group, and permission models
 
 
 # This function creates a special reset link for the user
@@ -33,3 +38,97 @@ def build_email(user, url):
     email = EmailMessage(subject, body, to=[user.email])
 
     return email  # Return the email object so it can be sent later
+
+
+def create_vendor():
+    # Check if the "Vendors" group already exists
+    try:
+        vendors_group = Group.objects.get(name="Vendors")
+    except Group.DoesNotExist:
+        # If it doesn't exist, create it
+        vendors_group = Group.objects.create(name="Vendors")
+        vendors_group.permissions.set(
+            [
+                Permission.objects.get(
+                    codename="add_product", content_type__app_label="eCommerce"
+                ),
+                Permission.objects.get(
+                    codename="change_product",
+                    content_type__app_label="eCommerce",
+                ),
+                Permission.objects.get(
+                    codename="delete_product",
+                    content_type__app_label="eCommerce",
+                ),
+                Permission.objects.get(
+                    codename="view_product",
+                    content_type__app_label="eCommerce",
+                ),
+                Permission.objects.get(
+                    codename="add_store", content_type__app_label="eCommerce"
+                ),
+                Permission.objects.get(
+                    codename="change_store",
+                    content_type__app_label="eCommerce",
+                ),
+                Permission.objects.get(
+                    codename="delete_store",
+                    content_type__app_label="eCommerce",
+                ),
+                Permission.objects.get(
+                    codename="view_store", content_type__app_label="eCommerce"
+                ),
+                Permission.objects.get(
+                    codename="view_order", content_type__app_label="eCommerce"
+                ),
+                Permission.objects.get(
+                    codename="view_orderitem",
+                    content_type__app_label="eCommerce",
+                ),
+                Permission.objects.get(
+                    codename="view_review", content_type__app_label="eCommerce"
+                ),
+            ]
+        )  # Optionally, set permissions for this group
+
+        vendors_group.save()  # Save the new group to the database
+
+    return vendors_group  # Return the group object for further use
+
+
+def create_shopper():
+    # Check if the "Shoppers" group already exists
+    try:
+        shoppers_group = Group.objects.get(name="Shoppers")
+    except Group.DoesNotExist:
+        # If it doesn't exist, create it
+        shoppers_group = Group.objects.create(name="Shoppers")
+        shoppers_group.permissions.set(
+            [
+                Permission.objects.get(
+                    codename="view_product",
+                    content_type__app_label="eCommerce",
+                ),
+                Permission.objects.get(
+                    codename="add_review", content_type__app_label="eCommerce"
+                ),
+                Permission.objects.get(
+                    codename="view_review", content_type__app_label="eCommerce"
+                ),
+                Permission.objects.get(
+                    codename="delete_review",
+                    content_type__app_label="eCommerce",
+                ),
+                Permission.objects.get(
+                    codename="change_review",
+                    content_type__app_label="eCommerce",
+                ),
+                Permission.objects.get(
+                    codename="view_order", content_type__app_label="eCommerce"
+                ),
+            ]
+        )  # Optionally, set permissions for this group
+
+        shoppers_group.save()  # Save the new group to the database
+
+    return shoppers_group  # Return the group object for further use

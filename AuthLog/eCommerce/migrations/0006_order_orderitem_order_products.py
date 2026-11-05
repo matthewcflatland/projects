@@ -25,7 +25,10 @@ class Migration(migrations.Migration):
                         verbose_name="ID",
                     ),
                 ),
-                ("total_price", models.DecimalField(decimal_places=2, max_digits=10)),
+                (
+                    "total_price",
+                    models.DecimalField(decimal_places=2, max_digits=10),
+                ),
                 ("created_at", models.DateTimeField(auto_now_add=True)),
                 (
                     "user",

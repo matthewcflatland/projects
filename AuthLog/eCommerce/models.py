@@ -15,7 +15,11 @@ class Product(models.Model):
     # How many items are available in stock (only positive numbers allowed)
 
     store = models.ForeignKey(
-        "Store", on_delete=models.CASCADE, related_name="products", null=True, blank=True
+        "Store",
+        on_delete=models.CASCADE,
+        related_name="products",
+        null=True,
+        blank=True,
     )
 
     def __str__(self):
@@ -27,9 +31,7 @@ class Store(models.Model):
     name = models.CharField(max_length=100)
     # The name of the store, like "My Online Shop"
 
-    owner = models.ForeignKey(
-        "auth.User", on_delete=models.CASCADE
-    )
+    owner = models.ForeignKey("auth.User", on_delete=models.CASCADE)
     # The user who owns this store; if the user is deleted, the store is also deleted
 
     def __str__(self):
@@ -38,7 +40,9 @@ class Store(models.Model):
 
 
 class Review(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="reviews")
+    product = models.ForeignKey(
+        Product, on_delete=models.CASCADE, related_name="reviews"
+    )
     # The product that this review is for; if the product is deleted, the review is also deleted
 
     user = models.ForeignKey("auth.User", on_delete=models.CASCADE)
@@ -57,9 +61,11 @@ class Review(models.Model):
 
     def __str__(self):
         # This makes it easier to see a summary of the review when printing or in admin pages
-        return (f"Review for {self.product.name} by {self.user.username}\n"
-                f"Rating: {self.rating}\n"
-                f"Comment: {self.comment}")
+        return (
+            f"Review for {self.product.name} by {self.user.username}\n"
+            f"Rating: {self.rating}\n"
+            f"Comment: {self.comment}"
+        )
 
 
 class Order(models.Model):
@@ -86,4 +92,7 @@ class OrderItem(models.Model):
     quantity = models.PositiveIntegerField(default=1)
 
     class Meta:
-        unique_together = ('order', 'product')  # Prevent duplicate product in same order
+        unique_together = (
+            "order",
+            "product",
+        )  # Prevent duplicate product in same order
