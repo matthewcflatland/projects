@@ -10,7 +10,7 @@
 
 5. add docstrings to classes, vies and helper functions
 
-6. extract sensitive settings such as SECRET_KEY and your email credintials into environment variables loaded from 	a .env file. check out python-dotenv or Django-environ
+6. extract sensitive settings such as SECRET_KEY and your email credintials into environment variables loaded from 	a .env file. check out python-dotenv or Django-environ ✅
 
 7. Add a detailed README.md file at the root of project repository
 

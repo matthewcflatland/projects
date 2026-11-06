@@ -1,3 +1,5 @@
+import os
+
 from django.shortcuts import (
     render,
     redirect,
@@ -42,6 +44,8 @@ from django.core.mail import EmailMessage  # To send emails
 from django.contrib.auth.hashers import (
     make_password,
 )  # To hash passwords before saving
+from dotenv import load_dotenv  # To load environment variables from a .env file
+load_dotenv()  # Load environment variables from the .env file
 
 
 # This function handles user login
@@ -175,7 +179,7 @@ def build_email(user, reset_url):
     subject = "Password Reset"
     user_email = user.email
     domain_email = (
-        "presasantest@gmail.com"  # The "from" email address for the email
+        os.getenv("EMAIL_HOST_USER")  # The "from" email address for the email
     )
     body = f"Hi {user.username},\nHere is your link to reset your password: {reset_url}"
 
