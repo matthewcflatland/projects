@@ -5,10 +5,11 @@ from django.core.exceptions import ObjectDoesNotExist
 from .models import OrderItem, Product, Store, Review, Order
 from datetime import datetime
 from .utils import build_email
-from django.core.mail import send_mail
 
 
 def leave_review(request, product_id):
+    """render the leave review page and handle the form submission
+    for leaving a review for a product."""
     user = request.user  # Get the currently logged-in user
 
     if user.has_perm("eCommerce.add_review"):
@@ -63,6 +64,8 @@ def leave_review(request, product_id):
 
 
 def product_page(request, product_id):
+    """render the product page for a specific product, displaying
+    its details and reviews."""
     try:
         product = Product.objects.get(
             id=product_id
@@ -83,6 +86,8 @@ def product_page(request, product_id):
 
 
 def change_store_name(request, store_id):
+    """render the change store name page and handle the form
+    submission for changing a store's name."""
     user = request.user  # Get the currently logged-in user
 
     # Check if user has permission to change stores
@@ -131,6 +136,7 @@ def change_store_name(request, store_id):
 
 
 def delete_store(request, store_id):
+    """deletes store and redirects to the edit store page."""
     user = request.user  # Get the currently logged-in user
 
     # Check if user has permission to delete stores
@@ -158,6 +164,8 @@ def delete_store(request, store_id):
 
 
 def view_order_history(request):
+    """render the order history page for the currently
+    logged-in user, displaying their past orders and items."""
     user = request.user  # Get the currently logged-in user
 
     # Check if user has permission to view orders
@@ -185,6 +193,8 @@ def view_order_history(request):
 
 
 def checkout(request):
+    """processes the checkout for the currently logged-in user,
+    creating an order and sending a confirmation email."""
     # Get the currently logged-in user
     user = request.user
 
@@ -221,6 +231,8 @@ def checkout(request):
 
 
 def add_store(request):
+    """render the add store page and handle the form
+    submission for adding a new store."""
     user = request.user  # Get the currently logged-in user
 
     # Check if user has permission to add stores
@@ -252,6 +264,8 @@ def add_store(request):
 
 
 def add_product(request, store_id):
+    """render the add product page and handle the form
+    submission for adding a new product to a store."""
     user = request.user  # Get the currently logged-in user
     store = Store.objects.get(
         id=store_id
@@ -304,6 +318,8 @@ def add_product(request, store_id):
 
 
 def delete_product(request, product_id):
+    """handles the deletion of a product and redirects
+    to the vendor store page."""
     user = request.user  # Get the currently logged-in user
 
     # Check if user has permission to delete products
@@ -332,6 +348,8 @@ def delete_product(request, product_id):
 
 
 def show_vendor_store(request, store_id):
+    """render the vendor store page, displaying the
+    store's details and its products."""
 
     store = Store.objects.get(
         id=store_id
@@ -345,6 +363,7 @@ def show_vendor_store(request, store_id):
 
 
 def edit_store(request):
+    """render the edit store page, allowing the user to manage their stores."""
     user = request.user  # Get the currently logged-in user
 
     if user.has_perm("eCommerce.change_store"):
@@ -360,6 +379,8 @@ def edit_store(request):
 
 
 def product_detail(request, product_id):
+    """render the product detail page, displaying the product's
+    details and its reviews."""
     user = request.user  # Get the currently logged-in user
 
     if user.has_perm("eCommerce.change_product"):
@@ -390,6 +411,8 @@ def product_detail(request, product_id):
 
 
 def search_product_page(request):
+    """render the search product page and handle the form submission
+    for searching a product by name."""
     user = request.user  # Get the current logged-in user
 
     # Check if user has permission to view products
@@ -439,6 +462,7 @@ def search_product_page(request):
 
 
 def add_item_to_cart(request):
+    """adds an item to the user's cart stored in the session."""
     # Get item name and quantity from POST form submission
     item = request.POST.get("item")
     quantity = request.POST.get("quantity")
@@ -473,6 +497,8 @@ def add_item_to_cart(request):
 
 
 def retrieve_products(request):
+    """retrieves the products and their quantities from the user's
+    cart stored in the session."""
     products = []
     session = request.session
 
@@ -492,6 +518,8 @@ def retrieve_products(request):
 
 
 def show_user_cart(request):
+    """renders the user's cart page, showing the items in their cart
+    and the total price."""
     # Get list of products and quantities from the session cart
     cart_items = retrieve_products(request)
 
@@ -510,6 +538,7 @@ def show_user_cart(request):
 
 
 def list_products(request):
+    """renders the products list page, showing all available products."""
     # Get all products from database
     products = Product.objects.all()
     # Show products list page, passing products to template
@@ -519,6 +548,7 @@ def list_products(request):
 
 
 def clear_cart(request):
+    """clears the user's cart stored in the session and redirects to the cart page."""
     # Empty the cart by setting session cart to empty dictionary
     request.session["cart"] = {}
     request.session.modified = True  # Mark session as changed
@@ -528,6 +558,8 @@ def clear_cart(request):
 
 
 def change_product_price(request, product_id):
+    """renders the edit product page and handles the form submission
+    for editing a product."""
     user = request.user  # Get the currently logged-in user
 
     # Find the product in the database
@@ -608,6 +640,8 @@ def change_product_price(request, product_id):
 
 
 def calculate_cart_total(request):
+    """calculates the total price of items in the user's cart
+    stored in the session."""
     cart_items = retrieve_products(
         request
     )  # Get the products in the user's cart

@@ -17,9 +17,7 @@ load_dotenv()  # Load environment variables from a .env file if present
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key secret in production!
-SECRET_KEY = (
-    os.getenv("SECRET_KEY")
-)
+SECRET_KEY = os.getenv("SECRET_KEY")
 
 # Debug mode means you see detailed error messages, only use in development
 DEBUG = True
@@ -109,6 +107,11 @@ USE_TZ = True  # Use timezone-aware datetimes
 # Static files (CSS, JavaScript, images) URL prefix
 STATIC_URL = "static/"
 
+# Additional locations of static files
+STATICFILES_DIRS = [
+    BASE_DIR / "eCommerce/static",
+]
+
 # Default primary key type for models
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
@@ -121,9 +124,9 @@ EMAIL_FILE_PATH = "/emails/"  # Path to save emails if using file backend
 EMAIL_HOST = "smtp.gmail.com"  # Gmail SMTP server
 EMAIL_PORT = 587  # SMTP port for TLS
 EMAIL_USE_TLS = True  # Use TLS for security
-EMAIL_HOST_USER = (
-    os.getenv("EMAIL_HOST_USER")  # Your email address used to send mails
-)
-EMAIL_HOST_PASSWORD = (
-    os.getenv("EMAIL_HOST_PASSWORD")  # Your email password or app password
-)
+EMAIL_HOST_USER = os.getenv(
+    "EMAIL_HOST_USER"
+)  # Your email address used to send mails
+EMAIL_HOST_PASSWORD = os.getenv(
+    "EMAIL_HOST_PASSWORD"
+)  # Your email password or app password

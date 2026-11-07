@@ -31,10 +31,10 @@ Note: For Gmail, you might need to create an App Password and enable "Less secur
 
 
 ## Database Setup
-Create MySQL database:
+1. Create MySQL database:
 Login to your MySQL server and create the database:
 CREATE DATABASE ecommerce_db;
-Update database credentials in AuthLog/settings.py if your MySQL username or password differ:
+2. Update database credentials in AuthLog/settings.py if your MySQL username or password differ:
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
@@ -45,14 +45,14 @@ DATABASES = {
         'PORT': '',
     }
 }
-Install MySQL Python adapter if not already installed:
+3. Install MySQL Python adapter if not already installed:
 pip install mysqlclient
 
-Apply migrations:
+4. Apply migrations:
 Run the following commands to create the necessary database tables:
 python manage.py makemigrations
 python manage.py migrate
-Create a superuser (for admin access):
+5. Create a superuser (for admin access):
 python manage.py createsuperuser
 Follow the prompts to create a user with admin privileges.
 
@@ -79,10 +79,10 @@ View stores(if authorized), add products, delete products, edit products.
 
 ## Password Reset Testing
 If you want to test password reset functionality without sending real emails:
-Change email backend in AuthLog/settings.py to console:
+1. Change email backend in AuthLog/settings.py to console:
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
-When you submit a password reset request, the reset link will print in your console/terminal.
-Copy and paste the link into your browser to reset the password.
+2. When you submit a password reset request, the reset link will print in your console/terminal.
+3. Copy and paste the link into your browser to reset the password.
 
 
 ## Troubleshooting

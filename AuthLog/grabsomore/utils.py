@@ -31,10 +31,13 @@ def build_email(user, url):
     subject = "Password Reset Request"  # Email subject line
 
     # Email message body, showing the user their reset link
-    # The URL includes the reset token, so they can reset their password securely
-    body = f"Hello {user.username},\n\nClick the link below to reset your password:\n\nhttp://localhost:8000{url}"
+    # The URL includes the reset token, so they can reset their
+    # password securely
+    body = (f"Hello {user.username},\n\nClick the link below to"
+            f" reset your password:\n\nhttp://localhost:8000{url}")
 
-    # Create the email object, setting the recipient to the user's email address
+    # Create the email object, setting the recipient to the user's
+    # email address
     email = EmailMessage(subject, body, to=[user.email])
 
     return email  # Return the email object so it can be sent later

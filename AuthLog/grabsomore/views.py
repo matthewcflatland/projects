@@ -34,8 +34,6 @@ from django.core.exceptions import (
 )  # For handling cases when an object is not found
 from .utils import (
     create_shopper,
-    generate_reset_url,
-    build_email,
     create_vendor,
 )  # Helper functions for email and token generation
 from .models import ResetToken  # Our custom model to store reset tokens
@@ -44,12 +42,17 @@ from django.core.mail import EmailMessage  # To send emails
 from django.contrib.auth.hashers import (
     make_password,
 )  # To hash passwords before saving
-from dotenv import load_dotenv  # To load environment variables from a .env file
+from dotenv import (
+    load_dotenv,
+)  # To load environment variables from a .env file
+
 load_dotenv()  # Load environment variables from the .env file
 
 
 # This function handles user login
 def login_user(request):
+    """renders the login page and handles the form submission for
+    user login."""
     # When the login form is submitted
     if request.method == "POST":
         # Get username and password from the form
@@ -62,7 +65,8 @@ def login_user(request):
         if user is not None:
             login(request, user)  # Log the user in and start their session
 
-            # Set the session to expire on 30 Dec 2025 (so user stays logged in until then)
+            # Set the session to expire on 30 Dec 2025 (so user stays logged
+            # in until then)
             exp_date = datetime(2025, 12, 30)
             now = datetime.now()
             expiry_seconds = int((exp_date - now).total_seconds())
@@ -91,6 +95,8 @@ def login_user(request):
 
 # This function handles user registration (signing up)
 def register_user(request):
+    """renders the registration page and handles the form submission
+    for user registration."""
     if request.method == "POST":
         # Get data from the form
         username = request.POST.get("username")
@@ -144,6 +150,7 @@ def register_user(request):
 
 # Helper function to change a user's password securely
 def change_user_password(username, new_password):
+    """changes the password for a user identified by username."""
     user = User.objects.get(username=username)  # Find user by username
 
     user.set_password(
@@ -155,6 +162,7 @@ def change_user_password(username, new_password):
 
 # Logs the user out and redirects to login page
 def logout_user(request):
+    """logs out the current user and redirects to the login page."""
     if request.user is not None:
         logout(request)  # Log out the current user
         return HttpResponseRedirect(reverse("grabsomore:login"))
@@ -163,6 +171,8 @@ def logout_user(request):
 # Only logged-in users can see the welcome page
 @login_required(login_url=reverse_lazy("grabsomore:login"))
 def welcome(request):
+    """renders the welcome page for logged-in users, showing their
+    username and group."""
     user = request.user  # Get the currently logged-in user
     user_group = (
         user.groups.first()
@@ -176,12 +186,16 @@ def welcome(request):
 
 # Creates the email object to send for password reset
 def build_email(user, reset_url):
+    """builds the email message to send to the user for password reset."""
     subject = "Password Reset"
     user_email = user.email
-    domain_email = (
-        os.getenv("EMAIL_HOST_USER")  # The "from" email address for the email
+    domain_email = os.getenv(
+        "EMAIL_HOST_USER"
+    )  # The "from" email address for the email
+    body = (
+        f"Hi {user.username},\nHere is your link to "
+        f"reset your password: {reset_url}"
     )
-    body = f"Hi {user.username},\nHere is your link to reset your password: {reset_url}"
 
     email = EmailMessage(subject, body, domain_email, [user_email])
     return email
@@ -189,6 +203,8 @@ def build_email(user, reset_url):
 
 # Creates a secure reset URL with a token that expires in 5 minutes
 def generate_reset_url(user):
+    """generates a secure password reset URL for the user with a token
+    that expires in 5 minutes."""
     domain = "http://127.0.0.1:8000/"
     app_name = "grabsomore"  # Make sure this matches your app name in urls.py
     url = f"{domain}{app_name}/reset/"
@@ -207,13 +223,15 @@ def generate_reset_url(user):
     reset_token = ResetToken.objects.create(
         user=user, token=hashed_token, expiry_date=expiry_date
     )
-
-    url += f"{token}/"  # Add the raw token (not hashed) to the URL for verification later
+    # Add the raw token (not hashed) to the URL for verification later
+    url += f"{token}/"
     return url
 
 
 # Handles sending the password reset email after user submits their email
 def send_password_reset(request):
+    """renders the password reset request page and handles the form
+    submission to send a password reset email."""
     if request.method == "POST":
         user_email = request.POST.get("email")
         try:
@@ -232,7 +250,8 @@ def send_password_reset(request):
             )
 
         except ObjectDoesNotExist:
-            # Even if no user found, still show confirmation (to avoid info leaks)
+            # Even if no user found, still show confirmation
+            # (to avoid info leaks)
             return render(
                 request,
                 "grabsomore/reset_email_sent.html",
@@ -245,6 +264,8 @@ def send_password_reset(request):
 
 # This view is called when user clicks the reset link in their email
 def reset_user_password(request, token):
+    """renders the password reset form if the token is valid, or shows an
+    error if invalid or expired."""
     hashed_token = sha1(token.encode()).hexdigest()  # Hash the token from URL
 
     try:
@@ -275,6 +296,8 @@ def reset_user_password(request, token):
 
 # Handles the password reset form submission (when user enters new password)
 def reset_password(request):
+    """handles the form submission for resetting a user's password after
+    they clicked the reset link."""
     if request.method == "POST":
         username = request.session.get("user_id")
         token = request.session.get("reset_token")
@@ -324,5 +347,6 @@ def reset_password(request):
         except (User.DoesNotExist, ResetToken.DoesNotExist):
             return render(request, "password_reset_invalid.html")
 
-    # If the page was accessed with GET or any other method, redirect to login page
+    # If the page was accessed with GET or any other method, redirect
+    # to login page
     return HttpResponseRedirect(reverse("grabsomore:login"))
