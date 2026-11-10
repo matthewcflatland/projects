@@ -1,10 +1,152 @@
 from django.shortcuts import render, redirect
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
 from django.urls import reverse
 from django.core.exceptions import ObjectDoesNotExist
 from .models import OrderItem, Product, Store, Review, Order
 from datetime import datetime
 from .utils import build_email
+from .serializers import ProductSerializer, ReviewSerializer, StoreSerializer
+from eCommerce import serializers
+from rest_framework.decorators import (
+    api_view,
+    authentication_classes,
+    permission_classes,
+    renderer_classes,
+)
+from rest_framework_xml.renderers import XMLRenderer
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.authentication import BasicAuthentication
+from rest_framework.permissions import IsAuthenticated
+from .reddit import get_reddit_posts
+
+
+def reddit_feed(request):
+    # Call our helper function to fetch posts
+    posts = get_reddit_posts("python")
+    # Pass the posts into the template
+    return render(request, "ecommerce/reddit_feed.html", {"posts": posts})
+
+
+def basic_api_response(request):
+    """#   A simple API endpoint that returns a basic JSON response."""
+    if request.method == "GET":
+        data = serializers.serialize("json", Store.objects.all())
+
+        return JsonResponse(data=data, safe=False)
+
+
+@api_view(["GET"])
+@renderer_classes(
+    [
+        XMLRenderer,
+    ]
+)
+def view_reviews_api(request):
+    """API endpoint to retrieve all reviews in the database."""
+    if request.method == "GET":
+        reviews = Review.objects.all()
+        serializer = ReviewSerializer(reviews, many=True)
+
+        return Response(serializer.data)
+
+
+@api_view(["GET"])
+@renderer_classes(
+    [
+        XMLRenderer,
+    ]
+)
+def view_stores_api(request):
+    """API endpoint to retrieve all stores in the database."""
+    if request.method == "GET":
+        stores = Store.objects.all()
+        serializer = StoreSerializer(stores, many=True)
+
+        return Response(serializer.data)
+
+
+@api_view(["GET"])
+@renderer_classes(
+    [
+        XMLRenderer,
+    ]
+)
+def view_products_api(request):
+    """API endpoint to retrieve all products in the database."""
+    if request.method == "GET":
+        products = Product.objects.all()
+        serializer = ProductSerializer(products, many=True)
+
+        return Response(serializer.data)
+
+
+@api_view(["POST"])
+@authentication_classes([BasicAuthentication])
+@permission_classes([IsAuthenticated])
+def add_store_api(request):
+    """render the add store page and handle the form submission
+    for adding a new store."""
+    vendor_id = request.data.get("owner")
+    if vendor_id is None:
+        return Response(
+            {"error": "vendor is required."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    if int(vendor_id) != request.user.id:
+        return Response(
+            {"error": "User ID and vendor ID do not match."},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    serializer = StoreSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(["POST"])
+@authentication_classes([BasicAuthentication])
+@permission_classes([IsAuthenticated])
+def add_product_api(request):
+    """API endpoint to add a new product to a store."""
+
+    vendor_id = request.data.get("owner")
+    if vendor_id is None:
+        return Response(
+            {"error": "vendor is required."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    if int(vendor_id) != request.user.id:
+        return Response(
+            {"error": "User ID and vendor ID do not match."},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    store_id = request.data.get("store")
+    try:
+        store = Store.objects.get(id=store_id)
+    except Store.DoesNotExist:
+        return Response(
+            {"error": "Store not found."}, status=status.HTTP_404_NOT_FOUND
+        )
+
+    if store.owner.id != request.user.id:
+        return Response(
+            {
+                "error": "You do not have permission to add products to this store."
+            },
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    serializer = ProductSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 def leave_review(request, product_id):
@@ -328,7 +470,7 @@ def delete_product(request, product_id):
             product = Product.objects.get(
                 id=product_id
             )  # Get the product with the specified ID
-            id = product.id  # Store the product ID for redirection
+            id = product.store.id  # Store the store ID for redirection
             product.delete()  # Delete the product from the database
             return redirect(
                 reverse("eCommerce:vendor_store", kwargs={"store_id": id})

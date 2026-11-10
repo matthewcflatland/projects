@@ -1,7 +1,8 @@
 from django.urls import path
 from . import views
 
-app_name = "eCommerce"  # This helps Django know these URLs belong to the eCommerce app
+# This helps Django know these URLs belong to the eCommerce app
+app_name = "eCommerce"
 
 urlpatterns = [
     # Home page: Shows the list of all products
@@ -64,4 +65,13 @@ urlpatterns = [
         views.leave_review,
         name="leave_review",
     ),
+    # API endpoints
+    path("basic_response/", views.basic_api_response),
+    path("get/stores/", views.view_stores_api),
+    path("post/stores/", views.add_store_api),
+    path("get/reviews/", views.view_reviews_api),
+    path("get/products/", views.view_products_api),
+    path("post/products/", views.add_product_api),
+    # URL to fetch Reddit posts
+    path("reddit/", views.reddit_feed, name="reddit_feed"),
 ]

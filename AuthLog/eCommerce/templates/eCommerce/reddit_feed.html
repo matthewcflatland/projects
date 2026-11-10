@@ -1,0 +1,21 @@
+{% load static %}
+<!DOCTYPE html> 
+<html lang="en"> 
+<head> 
+    <title>Reddit Feed</title> 
+    <link rel="stylesheet" type="text/css" href="{% static 'eCommerce/styles.css' %}"> 
+</head>
+    
+<body> 
+    <h1>Posts from Reddit</h1> 
+    <ul> 
+        {% for post in posts %} 
+        <li> 
+            <strong>{{ post.title }}</strong><br> 
+            by {{ post.author }}<br> 
+            <a href="{{ post.url }}" target="_blank">View Post</a> 
+        </li> 
+        {% endfor %} 
+    </ul> 
+</body> 
+</html>

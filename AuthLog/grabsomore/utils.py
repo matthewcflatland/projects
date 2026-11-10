@@ -33,8 +33,10 @@ def build_email(user, url):
     # Email message body, showing the user their reset link
     # The URL includes the reset token, so they can reset their
     # password securely
-    body = (f"Hello {user.username},\n\nClick the link below to"
-            f" reset your password:\n\nhttp://localhost:8000{url}")
+    body = (
+        f"Hello {user.username},\n\nClick the link below to"
+        f" reset your password:\n\nhttp://localhost:8000{url}"
+    )
 
     # Create the email object, setting the recipient to the user's
     # email address

@@ -130,3 +130,8 @@ EMAIL_HOST_USER = os.getenv(
 EMAIL_HOST_PASSWORD = os.getenv(
     "EMAIL_HOST_PASSWORD"
 )  # Your email password or app password
+
+# serializer for rest framework for xml response
+REST_FRAMEWORK = {
+    "DEFAULT_RENDERER_CLASSES": ("rest_framework_xml.renderers.XMLRenderer",)
+}
