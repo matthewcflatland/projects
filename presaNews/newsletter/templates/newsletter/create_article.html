@@ -1,0 +1,23 @@
+<!-- newsletter/templates/newsletter/edit_article.html --> 
+{% extends 'base.html' %} 
+{% block title %} 
+  Article - {{ article.title }} 
+{% endblock %}
+
+{% block header %}
+<h1>{{ article.title }}</h1>  
+{% endblock header %}
+
+
+{% block content %} 
+  <div class="container">  
+    <div class="box">
+      {{ article.content }} 
+    </div> 
+  </div>
+  <p>Author: {{ article.author }}</p>
+  <p>Publisher: {{ article.publisher }}</p>
+  <p> 
+    Published on: {{ article.created_at }} 
+  </p> 
+{% endblock %} 

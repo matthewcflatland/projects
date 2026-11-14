@@ -1,0 +1,50 @@
+<!-- newsletter/templates/base.html --> 
+{% load static %} 
+<!DOCTYPE html>
+
+<html lang="en"> 
+  <head> 
+    <meta charset="UTF-8" /> 
+    <meta name="viewport" content="width=device-width, 
+initial-scale=1.0" /> 
+    <title> 
+      {% block title %}  
+      {% endblock title %} 
+    </title>
+    <!-- Add your CSS links or stylesheets here --> 
+    <link rel="stylesheet" href="{% static 'grabsomore/styles.css' %}" /> 
+  </head>
+
+  <body> 
+    <header>
+
+      <h1> 
+        {% block header %}  
+        {% endblock header %} 
+      </h1> 
+      <!-- Add navigation links or other header content here --> 
+    </header>
+    {% if error %}
+      <p style="color: red;">{{ error }}</p>
+    {% endif %}
+    {% if notification %}
+      <p style="color: green;">{{ notification }}</p>
+    {% endif %}
+
+    <main> 
+      {% block content %} 
+      {% endblock content %} 
+    </main>
+
+    <footer> 
+      <!-- Add footer content or links here -->
+      <div style="margin-top: 20px;">  
+        <a href="{% url 'grabsomore:welcome' %}">
+            <button>⬅️Back Home</button>
+        </a>
+      </div>
+    </footer>
+
+  </body>
+
+</html> 

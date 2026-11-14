@@ -1,0 +1,39 @@
+{% load static %} 
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Welcome</title>
+    <link rel="stylesheet" href="{% static 'grabsomore/styles.css' %}" />
+</head>
+<body>
+    <!-- Greet the user using their logged-in username -->
+    <h1>Welcome, {{ request.user.username }}!</h1>
+
+    <p>You are now logged in.</p>
+
+    {% if error %}
+        <p style="color: red;">{{ error }}</p>
+    {% endif %}
+
+    <!-- This form logs the user out -->
+    <form method="POST" action="{% url 'grabsomore:logout' %}">
+        {% csrf_token %}
+        <button type="submit">Logout</button>
+    </form>
+
+    <!-- Link to registration page -->
+    <div class="menu">
+        <p>Menu</p>
+        <a href="{% url 'newsletter:list_articles' %}">
+            <button>📋 View all Articles</button>
+        </a>
+        <a href="{% url 'newsletter:list_articles' %}">
+            <button>📋 View all Newsletters</button>
+        </a>
+        <a href="{% url 'newsletter:list_articles' %}">
+            <button>📋 View my Subscriptions</button>
+        </a>
+
+    </div>
+</body>
+</html>

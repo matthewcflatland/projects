@@ -1,0 +1,48 @@
+<!-- newsletter/templates/newsletter/edit_article.html --> 
+{% extends 'base.html' %} 
+{% block title %} 
+  Article - {{ article.title }} 
+{% endblock %}
+
+{% block header %}
+<h1>Editing Article: {{ article.title }}</h1>  
+{% endblock header %}
+
+
+{% block content %} 
+  
+<table cellpadding="10" cellspacing="0">
+    <form method="POST">
+        {% csrf_token %}
+        <table border="1" cellpadding="10" cellspacing="0">
+            <tr>
+                <td><label for="title">Title:</label></td>
+                <td><input type="text" id="title" name="new_title" value="{{ article.title }}" required /></td>
+            </tr>
+            <tr>
+                <td><label for="content">Content:</label></td>
+                <td>
+                  <textarea id="content" name="new_content" required>{{ article.content }}</textarea> 
+                </td>
+            </tr>
+            <tr>
+                <td><label for="approved">Approved:</label></td>
+                <td>
+                  <input type="radio" name="approve" value="True" required>Yes
+                  <input type="radio" name="approve" value="False" checked required>No
+                </td>
+            </tr>
+        </table>
+        <br>
+        <button type="submit">Save</button>
+    </form>
+    <div class="menu">
+      <a href="{% url 'newsletter:list_articles' %}">
+        <button>📋 back</button>
+      </a>
+      <a href="{% url 'newsletter:delete_article' article_id=article.id %}">
+        <button>📋 delete</button>
+      </a>  
+    </div>
+    
+{% endblock %} 

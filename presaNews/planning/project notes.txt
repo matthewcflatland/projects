@@ -1,0 +1,18 @@
+models:
+Aticle:
+	title, content, author, created_at, approved, publisher
+
+Newsletter:
+	title, description, created_at, author, manytomany relation to Article
+
+Publisher:
+	editor, journalist
+
+User types:
+
+	Reader - can only view articles
+
+	Editor - can view, update, and delete articles and newsletters
+
+	Jorurnalist - can create, view, update, and delete articles and newsletters
+

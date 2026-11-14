@@ -1,0 +1,45 @@
+<!-- newsletter/templates/newsletter/view_article_list.html --> 
+{% extends 'base.html' %} 
+{% block title %} 
+  Article List
+{% endblock %}
+ 
+{% block header %}
+<h1>List of Articles</h1>  
+{% endblock header %}
+
+{% block content %}
+
+    {% if articles %}
+        <table border="1" cellpadding="10" cellspacing="0">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Author</th>
+                    <th>Publisher</th>
+                    <th>Date Created</th>
+                    {% if edit_perm %}
+                        <th>Approved</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            {% for article in articles %}
+                <tbody>
+                    <tr>
+                        <td><a href="{% url 'newsletter:article' article.id %}">{{ article.title }}</a></td>
+                        <td>{{ article.author }}</td>
+                        <td>{{ article.publisher }}</td>
+                        <td>{{ article.created_at }}</td>
+                        {% if edit_perm %}
+                            <td>{{ article.approved }}</td>
+                            <td><a href="{% url 'newsletter:edit_article' article.id %}">Edit</a></td>
+                        {% endif %}
+                    </tr>
+                </tbody>
+            {% endfor %}
+        </table>
+    {% else %}
+        <p>No Articles available.</p>
+    {% endif %}
+
+{% endblock %} 
