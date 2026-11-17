@@ -20,6 +20,11 @@
                     <th>Date Created</th>
                     {% if edit_perm %}
                         <th>Approved</th>
+                        <th>Review</th>
+                    {% endif %}
+                    {% if user_group.name == "Reader" %}
+                        <th>Subscribe to Journalist</th>
+                        <th>Subscribe to Publisher</th>
                     {% endif %}
                 </tr>
             </thead>
@@ -31,9 +36,25 @@
                         <td>{{ article.publisher }}</td>
                         <td>{{ article.created_at }}</td>
                         {% if edit_perm %}
-                            <td>{{ article.approved }}</td>
+                            {% if article.approved %}
+                                <td>Yes</td>
+                            {% else %}
+                                <td>No</td>
+                            {% endif %}
                             <td><a href="{% url 'newsletter:edit_article' article.id %}">Edit</a></td>
                         {% endif %}
+                        {% if user_group.name == "Reader" %}
+                            <td>
+                                <a href="{% url 'newsletter:subscribe_journalist' article.id %}">
+                                    <button>📋 Subscribe</button>
+                                </a>
+                            </td>
+                            <td>
+                                <a href="{% url 'newsletter:subscribe_publisher' article.id %}">
+                                    <button>📋 Subscribe</button>
+                                </a>                                
+                            </td>
+                        {% endif %}                        
                     </tr>
                 </tbody>
             {% endfor %}
@@ -41,5 +62,11 @@
     {% else %}
         <p>No Articles available.</p>
     {% endif %}
-
+    {% if create_perm %}
+    <div class="menu">
+        <a href="{% url 'newsletter:create_article' %}">
+            <button>📋 create new article</button>
+        </a>
+    </div>
+    {% endif %}
 {% endblock %} 

@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
+from newsletter.models import Article, Publisher, Newsletter
 
 
 class ResetToken(models.Model):
@@ -20,23 +21,24 @@ class ResetToken(models.Model):
         return f"ResetToken(user={self.user.username}, token={self.token[:10]}..., used={self.used})"
 
 
-class Journalist(AbstractUser):
-    articles = models.ForeignKey("Article", on_delete=models.CASCADE, related_name="journalist_articles")
-    # The articles that the journalist has written; if an article is deleted, it is also removed from the journalist's profile
+class CustomUser(AbstractUser):
+    email = models.EmailField(unique=True, null=False, blank=False)
+    publisher = models.ForeignKey(
+        Publisher, on_delete=models.CASCADE, null=True, blank=True)
 
-    newsletters = models.ForeignKey("Newsletter", on_delete=models.CASCADE, related_name="journalist_newsletters")
-    # The newsletters that the journalist has contributed to; if a newsletter is deleted, it is also removed from the journalist's profile
+    USERNAME_FIELD = 'username'
+    REQUIRED_FIELDS = ['email']
 
-    def __str__(self):
-        return self.username
+    publisher_subscriptions = models.ManyToManyField(
+        Publisher, related_name="subscriptions_publisher",
+        blank=True
+        )
 
-
-class Reader(AbstractUser):
-    publisher_subscription = models.ManyToManyField("Publisher", related_name="subscribers_p")
-    # The publishers that the user is subscribed to; if a publisher is deleted, the subscription is also deleted
-
-    journalist_subscription = models.ManyToManyField("Journalist", related_name="subscribers_j")
-    # The journalists that the user is subscribed to; if a journalist is deleted, the subscription is also deleted
+    journalist_subscriptions = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        related_name="subscriptions_journalist",
+        blank=True
+        )
 
     def __str__(self):
         return self.username

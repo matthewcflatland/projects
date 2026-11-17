@@ -10,14 +10,24 @@
 
 
 {% block content %} 
-  <div class="container">  
-    <div class="box">
-      {{ article.content }} 
-    </div> 
-  </div>
-  <p>Author: {{ article.author }}</p>
-  <p>Publisher: {{ article.publisher }}</p>
-  <p> 
-    Published on: {{ article.created_at }} 
-  </p> 
+
+  <table cellpadding="10" cellspacing="0">
+    <form method="POST">
+        {% csrf_token %}
+        <table border="1" cellpadding="10" cellspacing="0">
+            <tr>
+                <td><label for="title">Title:</label></td>
+                <td><input type="text" id="title" name="title" required /></td>
+            </tr>
+            <tr>
+                <td><label for="content">Content:</label></td>
+                <td>
+                  <textarea id="content" name="content" required></textarea> 
+                </td>
+            </tr>
+        </table>
+        <br>
+        <button type="submit">Save</button>
+    </form>
+
 {% endblock %} 

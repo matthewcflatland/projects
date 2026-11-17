@@ -4,10 +4,8 @@ from django.shortcuts import (
     render,
     redirect,
 )  # To show HTML pages and redirect users
-from django.contrib.auth.models import (
-    User,
-    Group,
-    Permission,
+from django.contrib.auth import (
+    get_user_model
 )  # Django's built-in user, group, and permission models
 from django.contrib.auth import (
     authenticate,
@@ -23,7 +21,12 @@ from django.contrib.auth.decorators import (
     login_required,
 )  # Makes sure only logged-in users can access pages
 from datetime import datetime
-from .utils import create_editor, create_journalist, create_reader
+from .utils import (
+    create_editor,  # create editor group if missing
+    create_journalist, # create journalist group if missing
+    create_reader,  # create reader group if missing
+    create_publisher # create publisher if missing
+    )
 import secrets  # For generating secure random tokens
 from datetime import timedelta
 from hashlib import sha1  # To hash tokens securely
@@ -34,8 +37,11 @@ from django.core.exceptions import (
     ObjectDoesNotExist,
 )
   # Helper functions for email and token generation
-from .models import ResetToken  # Our custom model to store reset tokens
-
+from .models import (
+    ResetToken,
+    CustomUser,  # Our custom model to store reset tokens
+)
+from newsletter.models import Publisher
 from django.core.mail import EmailMessage  # To send emails
 from django.contrib.auth.hashers import (
     make_password,
@@ -91,51 +97,96 @@ def login_user(request):
     return render(request, "grabsomore/login.html")
 
 
+def account_selector(request):
+    """rednders the acount type selector for registration"""
+    if request.method == "POST":
+        account_type = request.POST.get("account_type")
+
+        return render(
+            request,
+            "grabsomore:register",
+            {"account_type": account_type}
+        )
+
+    # If user visits registration page, show the registration form
+    return render(request, "grabsomore/account_type.html")
+
+
 # This function handles user registration (signing up)
 def register_user(request):
     """renders the registration page and handles the form submission
     for user registration."""
+    account_type = "default"
     if request.method == "POST":
         # Get data from the form
         username = request.POST.get("username")
-        password = request.POST.get("password")
-        email = request.POST.get("email")
-        account_type = request.POST.get(
-            "account_type"
-        )  # Get account type (reader/editor/journalist)
-
-        # Create a new user in the database
-        user = User.objects.create_user(
-            username=username, password=password, email=email
-        )
-
-        if account_type == "Reader":
-            reader_group = create_reader()
-            user.groups.add(reader_group)
-        elif account_type == "Editor":
-            editor_group = create_editor()
-            user.groups.add(editor_group)
-        elif account_type == "Journalist":
-            journalist_group = create_journalist()
-            user.groups.add(journalist_group)
+        account_type = request.POST.get("account_type")
+        if username is None:
+            return render(
+                request,
+                "grabsomore/register.html",
+                {"account_type": account_type}
+            )
         else:
-            pass  # If account type is invalid, do nothing (or handle error)
-        
-        user.save()  # Save all changes to the database
+            password = request.POST.get("password")
+            email = request.POST.get("email")
+            if account_type == "Reader":
+                publisher = None
+            else:
+                temp_pub = request.POST.get("publisher")
+                publisher = create_publisher(temp_pub, username)
 
-        login(request, user)  # Log the new user in automatically
+            try:
+                # Create a new user in the database
+                user = CustomUser.objects.create_user(
+                    username=username,
+                    password=password,
+                    email=email,
+                    publisher=publisher
+                )
+            except Exception:
+                return render(
+                    request,
+                    "grabsomore/register.html",
+                    {"error": "Email or username already in use.",
+                     "account_type": account_type}
+                )
 
-        # Redirect to welcome page after registration
-        return redirect(reverse("grabsomore:welcome"))
+            if account_type == "Reader":
+                reader_group = create_reader()
+                user.groups.add(reader_group)
+            elif account_type == "Editor":
+                editor_group = create_editor()
+                user.groups.add(editor_group)
+                user.journalist_subscriptions.set([])
+                user.publisher_subscriptions.set([])
+            elif account_type == "Journalist":
+                journalist_group = create_journalist()
+                user.groups.add(journalist_group)
+                user.journalist_subscriptions.set([])
+                user.publisher_subscriptions.set([])
+            else:
+                pass  # If account type is invalid, do nothing (or handle error)
+
+            user.save()  # Save all changes to the database
+
+            login(request, user)  # Log the new user in automatically
+
+            # Redirect to welcome page after registration
+            return redirect(reverse("grabsomore:welcome"))
 
     # If user visits registration page, show the registration form
-    return render(request, "grabsomore/register.html")
+    return render(
+        request,
+        "grabsomore/register.html",
+        {"account_type": account_type}
+    )
 
 
 # Helper function to change a user's password securely
 def change_user_password(username, new_password):
     """changes the password for a user identified by username."""
-    user = User.objects.get(username=username)  # Find user by username
+    user = CustomUser.objects.get(username=username)  # Find user by username
 
     user.set_password(
         new_password
@@ -219,7 +270,7 @@ def send_password_reset(request):
     if request.method == "POST":
         user_email = request.POST.get("email")
         try:
-            user = User.objects.get(email=user_email)  # Find user by email
+            user = CustomUser.objects.get(email=user_email)  # Find user by email
             reset_url = generate_reset_url(
                 user
             )  # Generate reset link with token
@@ -308,7 +359,7 @@ def reset_password(request):
             )
 
         try:
-            user = User.objects.get(id=username)  # Find user by ID
+            user = CustomUser.objects.get(id=username)  # Find user by ID
             hashed_token = sha1(token.encode()).hexdigest()
             reset_token = ResetToken.objects.get(token=hashed_token)
 
@@ -328,7 +379,7 @@ def reset_password(request):
             # Redirect user to login page after successful password reset
             return HttpResponseRedirect(reverse("grabsomore:login"))
 
-        except (User.DoesNotExist, ResetToken.DoesNotExist):
+        except (CustomUser.DoesNotExist, ResetToken.DoesNotExist):
             return render(request, "password_reset_invalid.html")
 
     # If the page was accessed with GET or any other method, redirect

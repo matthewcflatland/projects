@@ -2,6 +2,7 @@ from django.core.mail import EmailMessage  # Used to create and send emails
 from hashlib import sha1  # Used to securely hash data (like tokens)
 from datetime import datetime, timedelta  # To handle dates and times
 from .models import ResetToken  # Our model to store password reset tokens
+from newsletter.models import Publisher
 from django.urls import reverse  # To get URL from named paths
 from django.contrib.auth.models import (
     User,
@@ -45,7 +46,30 @@ def build_email(user, url):
     return email  # Return the email object so it can be sent later
 
 
+def create_publisher(publisher, username):
+
+    if publisher == "" or publisher == "Optional":
+        try:
+            publisher = Publisher.objects.get(name=username)
+        except Publisher.DoesNotExist:
+            publisher = Publisher.objects.create(
+                name=username
+            )
+    else:
+        temp = Publisher.objects.filter(name=publisher)
+        if not temp:
+            publisher = Publisher.objects.create(
+                name=publisher
+            )
+        else:
+            publisher = Publisher.objects.get(name=publisher)
+
+    return publisher
+
+
 def create_reader():
+    """creates the reader group if it does not exist or applies
+      the reader group to the new user"""
     try:
         group = Group.objects.get(name="Reader")
     except Group.DoesNotExist:
@@ -67,6 +91,8 @@ def create_reader():
 
 
 def create_editor():
+    """creates the editor group if it does not exist or applies
+    the editor group to the new user"""
     try:
         group = Group.objects.get(name="Editor")
     except Group.DoesNotExist:
@@ -104,6 +130,8 @@ def create_editor():
 
 
 def create_journalist():
+    """creates the journalist group if it does not exist or applies
+      the journalist group to the new user"""
     try:
         group = Group.objects.get(name="Journalist")
     except Group.DoesNotExist:

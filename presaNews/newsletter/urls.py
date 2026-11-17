@@ -20,4 +20,46 @@ urlpatterns = [
         views.delete_article,
         name="delete_article"
     ),
+    path(
+        "create_article/",
+        views.create_article,
+        name="create_article"
+    ),
+    path("review_article", views.approve_article, name="review_article"),
+    path("list_newsletters", views.list_newsletters, name="list_newsletters"),
+    path(
+        "newsletter/<int:newsletter_id>/",
+        views.display_newsletter,
+        name="newsletter",
+        ),
+    path(
+        "edit_newsletter/<int:newsletter_id>/",
+        views.edit_newsletter,
+        name="edit_newsletter"
+        ),
+    path(
+        "delete_newsletter/<int:newsletter_id>/",
+        views.delete_newsletter,
+        name="delete_newsletter"
+    ),
+    path(
+        "create_newsletter/",
+        views.create_newsletter,
+        name="create_newsletter"
+    ),
+    path(
+        "subscribe_journalist/<int:article_id>/",
+        views.subscribe_journalist,
+        name="subscribe_journalist"
+    ),
+    path(
+        "subscribe_publisher/<int:article_id>/",
+        views.subscribe_publisher,
+        name="subscribe_publisher"
+    ),
+    path(
+        "view_subscriptions/",
+        views.view_subscriptions,
+        name="view_subscriptions"
+    )
 ]

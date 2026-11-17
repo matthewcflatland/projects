@@ -1,0 +1,51 @@
+class Readers(models.Model):
+    user = models.ForeignKey("auth.User", on_delete=models.CASCADE)
+    # The user who is subscribed to the newsletter; if the user is deleted, the subscription is also deleted
+
+    publisher_subscription = models.ManyToManyField("Publisher", related_name="subscribers_p")
+    # The publishers that the user is subscribed to; if a publisher is deleted, the subscription is also deleted
+
+    journalist_subscription = models.ManyToManyField("Journalist", related_name="subscribers_j")
+    # The journalists that the user is subscribed to; if a journalist is deleted, the subscription is also deleted
+
+    def __str__(self):
+        # This makes it easier to see a summary of the subscription when printing or in admin pages
+        return f"{self.user.username} subscribed to {self.newsletter.title}"
+
+
+class Journalist(models.Model):
+    user = models.ForeignKey("auth.User", on_delete=models.CASCADE)
+    # The user who is a journalist; if the user is deleted, the journalist profile is also deleted
+
+    articles = models.ForeignKey("Article", on_delete=models.CASCADE, related_name="journalist_articles")
+    # The articles that the journalist has written; if an article is deleted, it is also removed from the journalist's profile
+
+    newsletters = models.ForeignKey("Newsletter", on_delete=models.CASCADE, related_name="journalist_newsletters")
+    # The newsletters that the journalist has contributed to; if a newsletter is deleted, it is also removed from the journalist's profile
+
+
+    def __str__(self):
+        # This makes it easier to see the journalist’s username when printing or in admin pages
+        return self.user.username
+
+
+class Journalist(CustomUser):
+    articles = models.ForeignKey("Article", on_delete=models.CASCADE, related_name="journalist_articles")
+    # The articles that the journalist has written; if an article is deleted, it is also removed from the journalist's profile
+
+    newsletters = models.ForeignKey("Newsletter", on_delete=models.CASCADE, related_name="journalist_newsletters")
+    # The newsletters that the journalist has contributed to; if a newsletter is deleted, it is also removed from the journalist's profile
+
+    def __str__(self):
+        return self.username
+
+
+class Reader(CustomUser):
+    publisher_subscription = models.ManyToManyField("Publisher", related_name="subscribers_p")
+    # The publishers that the user is subscribed to; if a publisher is deleted, the subscription is also deleted
+
+    journalist_subscription = models.ManyToManyField("Journalist", related_name="subscribers_j")
+    # The journalists that the user is subscribed to; if a journalist is deleted, the subscription is also deleted
+
+    def __str__(self):
+        return self.username

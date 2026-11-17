@@ -45,10 +45,7 @@ INSTALLED_APPS = [
     'newsletter',  # Our custom app for managing newsletters and articles
 ]
 
-AUTH_USER_MODEL = [
-    "grabsomore.Journalist",
-    "grabsomore.Reader",
-]
+AUTH_USER_MODEL = "grabsomore.CustomUser"
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

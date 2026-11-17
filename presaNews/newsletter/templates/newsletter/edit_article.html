@@ -26,12 +26,31 @@
                 </td>
             </tr>
             <tr>
+                <td><label for="author">Author:</label></td>
+                <td><p>{{ article.author }}</p></td>            
+            </tr>
+            <tr>
+                <td><label for="publisher">Publisher:</label></td>
+                <td><p>{{ article.publisher }}</p></td>
+            </tr>
+            <tr>
+                <td><label for="date">Created On:</label></td>
+                <td><p>{{ article.created_at }}</p></td>                
+            </tr>            
+            <tr>
+
+            </tr>
+            {% if user_group.name == "Editor" %}
+            <tr>
                 <td><label for="approved">Approved:</label></td>
                 <td>
-                  <input type="radio" name="approve" value="True" required>Yes
-                  <input type="radio" name="approve" value="False" checked required>No
+                  <select name="approve" id="approve" required>
+                      <option value="False">No</option>
+                      <option value="True">Yes</option>
+                  </select>
                 </td>
             </tr>
+            {% endif %}
         </table>
         <br>
         <button type="submit">Save</button>
@@ -45,4 +64,10 @@
       </a>  
     </div>
     
-{% endblock %} 
+{% endblock %}
+
+<label for="account_type">Select an Account Type:</label>
+        <select name="approved" id="approved" required>
+            <option value="No">No</option>
+            <option value="Yes">Yes</option>
+        </select>

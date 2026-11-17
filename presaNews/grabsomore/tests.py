@@ -1,18 +1,13 @@
 from django.test import TestCase
-from django.contrib.auth.models import (
-    User,
-    Group,
-    Permission,
-)
 from hashlib import sha1  # Used to securely hash data (like tokens)
-from .models import ResetToken
+from .models import ResetToken, CustomUser
 
 
 class UserModelTest(TestCase):
     def setUp(self):
         # Create a User object for testing
-        self.user = User.objects.create_user(
-            username="testuser", password="testpassword"
+        self.user = CustomUser.objects.create_user(
+            username="testuser", password="testpassword", email="test@test.com"
         )
 
     def test_user_has_username(self):
@@ -23,11 +18,23 @@ class UserModelTest(TestCase):
         # Test that a User object has the expected password
         self.assertTrue(self.user.check_password("testpassword"))
 
+    def test_create_user(self):
+        count = 10
+        for i in range(count):
+            self.user = CustomUser.objects.create_user(
+                username=f"testuser{i}", password="testpassword", email=f"test{i}@test.com"
+            )
+
+        user_list = CustomUser.objects.all()
+        print()
+        for user in user_list:
+            print(f"username: {user}")
+
 
 class ResetTokenModelTest(TestCase):
     def setUp(self):
         # Create a User object for testing
-        self.user = User.objects.create_user(
+        self.user = CustomUser.objects.create_user(
             username="testuser", password="testpassword"
         )
         # Create a ResetToken object for testing

@@ -3,10 +3,26 @@
 <html>
 <head>
     <title>Register</title>
-    <link rel="stylesheet" href="{% static 'eCommerce/styles.css' %}" />
+    <link rel="stylesheet" href="{% static 'grabsomore/styles.css' %}" />
 </head>
 <body>
     <h2>Register An Account</h2>
+
+    {% if account_type == "default" %}
+        <form method="POST" action="{% url 'grabsomore:register' %}">
+        {% csrf_token %}  <!-- Protects against cross-site attacks -->
+
+        <label for="account_type">Select an Account Type:</label>
+        <select name="account_type" id="cars" required>
+            <option value="Reader">Reader</option>
+            <option value="Editor">Editor</option>
+            <option value="Journalist">Journalist</option>
+        </select>
+
+        <!-- Submit button -->
+        <button type="submit">Register</button>
+    </form>
+    {% else %}
 
     <!-- This form sends registration info to the backend -->
     <form method="POST" action="{% url 'grabsomore:register' %}">
@@ -25,22 +41,29 @@
         <input type="password" name="password" required><br><br>
 
         <!-- Account Type -->
-        <label>
-            <input type="radio" name="account_type" value="Reader" required>
-            Reader
-        </label><br>
-        <label>
-            <input type="radio" name="account_type" value="Editor" required>
-            Editor
-        </label><br>
-        <label>
-            <input type="radio" name="account_type" value="Journalist" required>
-            Journalist
-        </label><br><br>
+        <label for="account_type">Select an Account Type:</label>
+        <select name="account_type" id="cars" required>
+            {% if account_type == "Reader" %}
+            <option value="Reader">Reader</option>
+            {% endif %}
+            {% if account_type == "Editor" %}
+            <option value="Editor">Editor</option>
+            {% endif %}
+            {% if account_type == "Journalist" %}
+            <option value="Journalist">Journalist</option>
+            {% endif %}
+        </select><br><br>
+
+        <!-- Publisher input -->
+         {% if account_type == "Editor" or account_type == "Journalist" %}
+         <label for="publisher">Publisher:</label>
+        <input type="text" name="publisher" value="Optional"><br><br>
+        {% endif %}
 
         <!-- Submit button -->
         <button type="submit">Register</button>
     </form>
+    {% endif %}
 
     <!-- Error message display -->
     {% if error %}

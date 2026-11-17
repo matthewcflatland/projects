@@ -16,3 +16,5 @@ User types:
 
 	Jorurnalist - can create, view, update, and delete articles and newsletters
 
+
+

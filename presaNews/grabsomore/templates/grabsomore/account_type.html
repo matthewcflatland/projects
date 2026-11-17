@@ -1,0 +1,34 @@
+{% load static %} 
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Register</title>
+    <link rel="stylesheet" href="{% static 'grabsomore/styles.css' %}" />
+</head>
+<body>
+    <h2>Select An Account Type</h2>
+
+    <!-- This form sends registration info to the backend -->
+    <form method="POST" action="{% url 'grabsomore:register' %}">
+        {% csrf_token %}  <!-- Protects against cross-site attacks -->
+
+        <label for="account_type">Select an Account Type:</label>
+        <select name="account_type" id="cars" required>
+            <option value="Reader">Reader</option>
+            <option value="Editor">Editor</option>
+            <option value="Journalist">Journalist</option>
+        </select>
+
+        <!-- Submit button -->
+        <button type="submit">Register</button>
+    </form>
+
+    <!-- Error message display -->
+    {% if error %}
+        <p style="color: red;">{{ error }}</p>
+    {% endif %}
+
+    <!-- Link to login page -->
+    <p>Already have an account? <a href="{% url 'grabsomore:login' %}">Login here</a></p>
+</body>
+</html>

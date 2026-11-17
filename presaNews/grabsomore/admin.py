@@ -10,10 +10,11 @@ class CustomUserAdmin(UserAdmin):
     form = CustomUserChangeForm
     model = CustomUser
     list_display = [
-        "email",
         "username",
-        "is_staff",
+        "publisher",
+        "email",
         "is_active",
+        "is_staff",
     ]
 
 

@@ -8,6 +8,8 @@ urlpatterns = [
     path("", views.login_user, name="login"),
     # Registration page where users can sign up
     path("register/", views.register_user, name="register"),
+    # Registration page to select account type
+    path("register_account", views.account_selector, name="register_account"),
     # Logs the user out
     path("logout/", views.logout_user, name="logout"),
     # Welcome page after successful login

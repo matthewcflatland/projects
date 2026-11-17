@@ -1,0 +1,65 @@
+<!-- newsletter/templates/newsletter/view_article_list.html --> 
+{% extends 'base.html' %} 
+{% block title %} 
+  Article List
+{% endblock %}
+ 
+{% block header %}
+<h1>List of Articles</h1>  
+{% endblock header %}
+
+{% block content %}
+
+    {% if j_articles or p_articles %}
+        {% for j in j_articles %}
+        <h2>Journalist: {{ j.0.author }} </h2>
+        <table border="1" cellpadding="10" cellspacing="0">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Author</th>
+                    <th>Publisher</th>
+                    <th>Date Created</th>
+                </tr>
+            </thead>
+            {% for article in j %}   
+                <tbody>
+                    <tr>
+                        <td><a href="{% url 'newsletter:article' article.id %}">{{ article.title }}</a></td>
+                        <td>{{ article.author }}</td>
+                        <td>{{ article.publisher }}</td>
+                        <td>{{ article.created_at }}</td>
+                    </tr>
+                </tbody>
+            {% endfor %}
+        </table>
+        {% endfor %}
+        {% for p in p_articles %}
+        <h2>Publisher: {{ p.0.publisher }}</h2>
+        <table border="1" cellpadding="10" cellspacing="0">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Author</th>
+                    <th>Publisher</th>
+                    <th>Date Created</th>
+                </tr>
+            </thead>
+            {% for article in p %}   
+                <tbody>
+                    <tr>
+                        <td><a href="{% url 'newsletter:article' article.id %}">{{ article.title }}</a></td>
+                        <td>{{ article.author }}</td>
+                        <td>{{ article.publisher }}</td>
+                        <td>{{ article.created_at }}</td>
+                    </tr>
+                </tbody>
+            {% endfor %}
+        </table>
+        {% endfor %}
+    {% else %}
+        <p>No Subscribed Articles.</p>
+    {% endif %}
+{% endblock %} 
+
+<!--<a href="{% url 'newsletter:unsubscribe' article.id %}">unsubscribe></a>!-->
