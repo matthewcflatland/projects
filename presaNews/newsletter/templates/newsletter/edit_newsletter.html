@@ -1,0 +1,75 @@
+<!-- newsletter/templates/newsletter/edit_article.html --> 
+{% extends 'base.html' %} 
+{% block title %} 
+  Newsletter - {{ newsletter.title }} 
+{% endblock %}
+
+{% block header %}
+<h1>Editing Newsletter: {{ newsletter.title }}</h1>  
+{% endblock header %}
+
+
+{% block content %} 
+  
+<table cellpadding="10" cellspacing="0">
+    <form method="POST">
+        {% csrf_token %}
+        <table border="1" cellpadding="10" cellspacing="0">
+            <tr>
+                <td><label for="title">Title:</label></td>
+                <td><input type="text" id="title" name="new_title" value="{{ newsletter.title }}" required /></td>
+            </tr>
+            <tr>
+                <td><label for="content">Description:</label></td>
+                <td>
+                  <textarea id="content" name="new_content" required>{{ newsletter.description }}</textarea> 
+                </td>
+            </tr>
+            <tr>
+                <td><label for="author">Author:</label></td>
+                <td><p>{{ newsletter.author }}</p></td>            
+            </tr>
+            <tr>
+                <td><label for="date">Created On:</label></td>
+                <td><p>{{ newsletter.created_at }}</p></td>                
+            </tr>            
+            <tr>
+                <td><label for="account_type">Select An Article To Remove: </label></td>
+                <td>
+                    {% if articles %}
+                        <select name="articles" id="article">
+                            <option value="None">None</option>
+                            {% for article in articles %}
+                            <option value="{{ article.id }}">{{ article.title }}</option>
+                            {% endfor %}
+                        </select>
+                    {% else %}
+                        <p> None </p>
+                    {% endif %} 
+                </td>
+            </tr>
+            {% if user_group.name == "Editor" %}
+            <tr>
+                <td><label for="approved">Approved:</label></td>
+                <td>
+                  <select name="approve" id="approve" required>
+                      <option value="False">No</option>
+                      <option value="True">Yes</option>
+                  </select>
+                </td>
+            </tr>
+            {% endif %}
+        </table>
+        <br>
+        <button type="submit">Save Edits</button>
+    </form>
+    <div class="menu">
+      <a href="{% url 'newsletter:list_newsletters' %}">
+        <button>📋 back</button>
+      </a>
+      <a href="{% url 'newsletter:delete_newsletter' newsletter_id=newsletter.id %}">
+        <button>📋 delete</button>
+      </a>  
+    </div>
+    
+{% endblock %}

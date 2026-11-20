@@ -1,0 +1,52 @@
+<!-- newsletter/templates/newsletter/view_article_list.html --> 
+{% extends 'base.html' %} 
+{% block title %} 
+  Newsletter List
+{% endblock %}
+ 
+{% block header %}
+<h1>List of Newsletters</h1>  
+{% endblock header %}
+
+{% block content %}
+
+    {% if newsletters %}
+        <table border="1" cellpadding="10" cellspacing="0">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Description</th>
+                    <th>Author</th>
+                    <th>Date Created</th>
+                    {% if edit_perm %}
+                        <th>Review</th>
+                        <th>Articles</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            {% for newsletter in newsletters %}
+                <tbody>
+                    <tr>
+                        <td><a href="{% url 'newsletter:newsletter' newsletter.id %}">{{ newsletter.title }}</a></td>
+                        <td>{{ newsletter.description }}</td>
+                        <td>{{ newsletter.author }}</td>
+                        <td>{{ newsletter.created_at }}</td>
+                        {% if edit_perm %}
+                            <td><a href="{% url 'newsletter:edit_newsletter' newsletter.id %}">Edit</a></td>
+                            <td><a href="{% url 'newsletter:add_article' newsletter.id %}">Add</a></td>
+                        {% endif %}                
+                    </tr>
+                </tbody>
+            {% endfor %}
+        </table>
+    {% else %}
+        <p>No Newsletters available.</p>
+    {% endif %}
+    {% if create_perm %}
+    <div class="menu">
+        <a href="{% url 'newsletter:create_newsletter' %}">
+            <button>📋 create new newsletter</button>
+        </a>
+    </div>
+    {% endif %}
+{% endblock %} 

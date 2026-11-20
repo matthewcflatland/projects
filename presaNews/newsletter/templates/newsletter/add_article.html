@@ -1,0 +1,45 @@
+<!-- newsletter/templates/newsletter/view_article_list.html --> 
+{% extends 'base.html' %} 
+{% block title %} 
+  Article List
+{% endblock %}
+ 
+{% block header %}
+<h1>List of Articles</h1>  
+{% endblock header %}
+
+{% block content %}
+
+    {% if all_articles %}
+    <form method="POST">
+        {% csrf_token %}
+        <table border="1" cellpadding="10" cellspacing="0">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Author</th>
+                    <th>Publisher</th>
+                    <th>Date Created</th>
+                    <th>Add</th>
+                </tr>
+            </thead>
+            {% for article in all_articles %}
+                <tbody>
+                    <tr>
+                        <td><a href="{% url 'newsletter:article' article.id %}">{{ article.title }}</a></td>
+                        <td>{{ article.author }}</td>
+                        <td>{{ article.publisher }}</td>
+                        <td>{{ article.created_at }}</td>
+                        <td><input type="checkbox" id="articles" name="articles" value="{{ article.id }}"></td>
+                    </tr>
+                </tbody>
+            {% endfor %}
+        </table>
+        <br><br>
+        <button type="submit">Add</button>
+    </form>
+    {% else %}
+        <p>No Articles available.</p>
+    {% endif %}
+{% endblock %} 
+

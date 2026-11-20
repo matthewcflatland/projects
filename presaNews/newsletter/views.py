@@ -1,13 +1,248 @@
 from django.shortcuts import render, redirect
-from django.http import HttpResponseRedirect, JsonResponse
-from django.urls import reverse
+from django.http import HttpResponseRedirect
+from django.urls import reverse, reverse_lazy
 from django.core.exceptions import ObjectDoesNotExist
+from django.contrib.auth.decorators import login_required
 from datetime import datetime
 from .models import Article, Newsletter, Publisher
 from grabsomore.models import CustomUser
 from .utils import build_email
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework import status
+from .serializers import ArticleSerializer
 
 
+@api_view(['PUT'])
+@authentication_classes((TokenAuthentication,))
+@permission_classes((IsAuthenticated,))
+def api_edit_article(request, article_id):
+    '''Renders edit article page with article information'''
+    user = request.user
+    user_group = user.groups.first()
+    if user.has_perms(["newsletter.change_article"]):
+        try:
+            article = Article.objects.get(id=article_id)
+
+        except Article.DoesNotExist:
+            return Response(
+                data="Article does not exist",
+                status=status.HTTP_404_NOT_FOUND,
+                )
+
+        new_title = request.PUT.get("new_title")
+        new_content = request.PUT.get("new_content")
+
+        if not new_title or not new_content:
+            error = "Title and Content are required."
+            return Response(
+                data=error,
+                status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        article.title = new_title
+        article.content = new_content
+        if user_group.name != "Editor":
+            article.save()
+        else:
+            if user_group.name == "Editor":
+                approve = request.POST.get("approve")
+                if article.approved:
+                    article.save()
+                else:
+                    if approve == "True":
+                        article.approved = approve
+                        article.save()
+                        approve_article(article)
+                    else:
+                        article.save()
+
+        serializer = ArticleSerializer(article)
+
+        return Response(
+            data=serializer.data,
+            status=status.HTTP_200_OK,
+            )
+
+    else:
+        error = "You do not have permission to edit articles."
+        return Response(data=error, status=status.HTTP_403_FORBIDDEN)
+
+
+@api_view(['GET'])
+@authentication_classes((TokenAuthentication,))
+@permission_classes((IsAuthenticated,))
+def api_view_subscriptions(request):
+    user = request.user
+    journalists = user.journalist_subscriptions.all()
+    publishers = user.publisher_subscriptions.all()
+    articles = []
+    for journalist in journalists:
+        temp = Article.objects.filter(author=journalist)
+        articles.extend(temp)
+
+    for publisher in publishers:
+        temp = Article.objects.filter(publisher=publisher)
+        for i in temp:
+            if i not in articles:
+                articles.extend(temp)
+
+    serializer = ArticleSerializer(articles, many=True)
+
+    return Response(data=serializer.data)
+
+
+@api_view(['GET', 'PUT', 'Delete'])
+@authentication_classes((TokenAuthentication,))
+@permission_classes((IsAuthenticated,))
+def api_retrieve_article(request, article_id):
+    if request.method == "GET":
+        try:
+            article = Article.objects.get(id=article_id)
+        except Article.DoesNotExist:
+            return Response(data="Article does not exist", status=status.HTTP_404_NOT_FOUND)
+
+        serializer = ArticleSerializer(article)
+
+        return Response(data=serializer.data)
+
+    elif request.method == "PUT":
+        user = request.user
+        user_group = user.groups.first()
+        if user.has_perms(["newsletter.change_article"]):
+            try:
+                article = Article.objects.get(id=article_id)
+
+            except Article.DoesNotExist:
+                return Response(
+                    data="Article does not exist",
+                    status=status.HTTP_404_NOT_FOUND,
+                    )
+
+            new_title = request.data.get("title")
+            new_content = request.data.get("content")
+            approve = request.data.get("approved")
+
+            if not new_title or not new_content:
+                error = "Title and Content are required."
+                return Response(
+                    data=error,
+                    status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+            article.title = new_title
+            article.content = new_content
+            if approve is True:
+                if user_group.name == "Editor":
+                    article.approved = approve
+                    article.save()
+                    approve_article(article)
+                else:
+                    return Response(
+                        data="Do not have authorization to approve articles.",
+                        status=status.HTTP_403_FORBIDDEN
+                    )
+            else:
+                article.save()
+
+            serializer = ArticleSerializer(article)
+
+            return Response(
+                data=serializer.data,
+                status=status.HTTP_200_OK,
+                )
+
+        else:
+            error = "You do not have permission to edit articles."
+            return Response(data=error, status=status.HTTP_403_FORBIDDEN)
+
+    elif request.method == "DELETE":
+        user = request.user
+        if user.has_perms(["newsletter.delete_article"]):
+            try:
+                article = Article.objects.get(id=article_id)
+                article.delete()
+                return Response(
+                    data="Deleted Successfully",
+                    status=status.HTTP_204_NO_CONTENT,
+                    )
+
+            except Article.DoesNotExist:
+                return Response(
+                    data="Article does not exist",
+                    status=status.HTTP_404_NOT_FOUND,
+                    )
+        else:
+            return Response(
+                data="You do not have permission to delete articles.",
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+    else:
+        return Response(
+            data="Method Not Allowed.",
+            status=status.HTTP_405_METHOD_NOT_ALLOWED,
+            )
+
+
+@api_view(['GET', 'POST'])
+@authentication_classes((TokenAuthentication,))
+@permission_classes((IsAuthenticated,))
+def api_view_articles(request):
+    if request.method == "GET":
+        articles = Article.objects.filter(approved=True)
+
+        serializer = ArticleSerializer(articles, many=True)
+
+        return Response(data=serializer.data, status=status.HTTP_200_OK)
+
+    elif request.method == "POST":
+        user = request.user
+        if user.has_perms(["newsletter.add_article"]):
+
+            if request.method == "POST":
+                title = request.data.get("title")
+                content = request.data.get("content")
+                publisher = Publisher.objects.get(name=user.publisher)
+
+                if not title or not content:
+                    error = "Title and Content are required."
+                    return Response(
+                        data=error,
+                        status=status.HTTP_400_BAD_REQUEST,
+                        safe=False)
+
+                article = Article.objects.create(
+                    title=title,
+                    content=content,
+                    author=user,
+                    created_at=datetime.now(),
+                    approved=False,
+                    publisher=publisher
+                )
+
+                serializer = ArticleSerializer(article)
+
+                return Response(
+                    data=serializer.data,
+                    status=status.HTTP_201_CREATED)
+
+        else:
+            error = "You do not have permission to create articles."
+            return Response(
+                data=error,
+                status=status.HTTP_403_FORBIDDEN,
+                )
+    else:
+        return Response(
+            data="Method Not Allowed.",
+            status=status.HTTP_405_METHOD_NOT_ALLOWED,
+            safe=False)
+
+
+@login_required(login_url=reverse_lazy("grabsomore:login"))
 def view_subscriptions(request):
     user = request.user
     journalists = user.journalist_subscriptions.all()
@@ -31,6 +266,7 @@ def view_subscriptions(request):
     )
 
 
+@login_required(login_url=reverse_lazy("grabsomore:login"))
 def subscribe_journalist(request, article_id):
     user = request.user
     article = Article.objects.get(id=article_id)
@@ -44,6 +280,7 @@ def subscribe_journalist(request, article_id):
             )
 
 
+@login_required(login_url=reverse_lazy("grabsomore:login"))
 def subscribe_publisher(request, article_id):
     user = request.user
     article = Article.objects.get(id=article_id)
@@ -69,6 +306,7 @@ def approve_article(article):
         for j in temp_j:
             if journalist == j.id:
                 temp.append(user)
+                break
 
         temp_p = []
         temp_p = user.publisher_subscriptions.all()
@@ -78,6 +316,7 @@ def approve_article(article):
                     pass
                 else:
                     temp.append(user)
+                break
 
     users = temp
 
@@ -86,6 +325,7 @@ def approve_article(article):
         email.send()
 
 
+@login_required(login_url=reverse_lazy("grabsomore:login"))
 def create_article(request):
     '''Creates a new article'''
     user = request.user
@@ -127,6 +367,7 @@ def create_article(request):
         )
 
 
+@login_required(login_url=reverse_lazy("grabsomore:login"))
 def delete_article(request, article_id):
     '''deletes requested article'''
     user = request.user
@@ -144,6 +385,7 @@ def delete_article(request, article_id):
             )
 
 
+@login_required(login_url=reverse_lazy("grabsomore:login"))
 def edit_article(request, article_id):
     '''Renders edit article page with article information'''
     user = request.user
@@ -203,6 +445,7 @@ def edit_article(request, article_id):
         )
 
 
+@login_required(login_url=reverse_lazy("grabsomore:login"))
 def list_articles(request):
     '''Renders list of all articles on the page'''
     user = request.user
@@ -253,6 +496,7 @@ def list_articles(request):
         )
 
 
+@login_required(login_url=reverse_lazy("grabsomore:login"))
 def display_article(request, article_id):
     '''Renders a requested article page with article information'''
     article = Article.objects.get(id=article_id)
@@ -281,18 +525,19 @@ def create_newsletter(request):
 
             newsletter = Newsletter.objects.create(
                 title=title,
-                content=content,
+                description=content,
                 author=user,
-                created_at=datetime.now(),
-                approved=False,
-                publisher=publisher
+                created_at=datetime.now()
             )
 
             return redirect(reverse("newsletter:list_newsletters"))
 
+        articles = Article.objects.all()
         # Show form when page is first loaded (GET request)
         return render(
-            request, "newsletter/create_newsletter.html"
+            request,
+            "newsletter/create_newsletter.html",
+            {"articles": articles}
         )
 
     else:
@@ -326,6 +571,7 @@ def edit_newsletter(request, newsletter_id):
     if user.has_perms(["newsletter.change_newsletter"]):
         try:
             newsletter = Newsletter.objects.get(id=newsletter_id)
+            articles = newsletter.articles.all()
 
         except Newsletter.DoesNotExist:
             return render(
@@ -337,7 +583,7 @@ def edit_newsletter(request, newsletter_id):
         if request.method == "POST":
             new_title = request.POST.get("new_title")
             new_content = request.POST.get("new_content")
-            approve = request.POST.get("approve")
+            article = request.POST.get("articles")
 
             if not new_title or not new_content:
                 return render(
@@ -347,21 +593,18 @@ def edit_newsletter(request, newsletter_id):
                     )
 
             newsletter.title = new_title
-            newsletter.content = new_content
-            if approve is None:
-                approve = False
-                newsletter.approved = approve
-            else:
-                newsletter.approved = approve
-            newsletter.save()
+            newsletter.description = new_content
+            newsletter.articles.remove(article)
 
             return redirect(reverse("newsletter:list_newsletters"))
 
         # Show form when page is first loaded (GET request)
+
         return render(
             request,
             "newsletter/edit_newsletter.html",
-            {"newsletter": newsletter}
+            {"newsletter": newsletter,
+             "articles": articles}
         )
 
     else:
@@ -408,7 +651,63 @@ def list_newsletters(request):
 def display_newsletter(request, newsletter_id):
     '''Renders a requested newsletter page with newsletter information'''
     newsletter = Newsletter.objects.get(id=newsletter_id)
+    articles = newsletter.articles.all()
 
     return render(
-        request, "newsletter/newsletter.html", {"newsletter": newsletter}
+        request, "newsletter/newsletter.html", {"newsletter": newsletter, "articles": articles}
     )
+
+
+def add_article(request, newsletter_id):
+    '''Renders edit newsletter page with newsletter information'''
+    user = request.user
+    if user.has_perms(["newsletter.change_newsletter"]):
+        try:
+            newsletter = Newsletter.objects.get(id=newsletter_id)
+            articles = list(newsletter.articles.all())
+
+        except Newsletter.DoesNotExist:
+            return render(
+                request,
+                "newsletter/add_article.html",
+                {"error": "The newsletter does not exist."}
+            )
+
+        if request.method == "POST":
+            temp_articles = request.POST.getlist("articles")
+            new_articles = []
+            for temp in temp_articles:
+                temp_article = Article.objects.get(id=temp)
+                new_articles.append(temp_article)
+
+            for article in new_articles:
+                if article in articles:
+                    pass
+                else:
+                    newsletter.articles.add(article)
+
+            return redirect(reverse("newsletter:list_newsletters"))
+
+        # Show form when page is first loaded (GET request)
+        all_articles = list(Article.objects.all())
+        if articles is None:
+            pass
+        else:
+            for article in all_articles:
+                for a in articles:
+                    if a == article:
+                        all_articles.remove(a)
+                        break
+        return render(
+            request,
+            "newsletter/add_article.html",
+            {"newsletter": newsletter,
+             "all_articles": all_articles}
+        )
+
+    else:
+        return render(
+            request,
+            "newsletter/add_article.html",
+            {"error": "You do not have permission to edit newsletters."}
+        )

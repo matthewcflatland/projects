@@ -43,6 +43,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'grabsomore',  # Our custom app for handling password resets
     'newsletter',  # Our custom app for managing newsletters and articles
+    'rest_framework',
+    'rest_framework.authtoken',
 ]
 
 AUTH_USER_MODEL = "grabsomore.CustomUser"
@@ -155,7 +157,11 @@ EMAIL_HOST_PASSWORD = os.getenv(
     "EMAIL_HOST_PASSWORD"
 )  # Your email password or app password
 
-# serializer for rest framework for xml response
 REST_FRAMEWORK = {
-    "DEFAULT_RENDERER_CLASSES": ("rest_framework_xml.renderers.XMLRenderer",)
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
 }

@@ -1,4 +1,5 @@
 from django.urls import path
+from .utils import MethodDispatchView
 from . import views
 
 app_name = "newsletter"
@@ -25,8 +26,16 @@ urlpatterns = [
         views.create_article,
         name="create_article"
     ),
-    path("review_article", views.approve_article, name="review_article"),
-    path("list_newsletters", views.list_newsletters, name="list_newsletters"),
+    path(
+        "review_article",
+        views.approve_article,
+        name="review_article"
+        ),
+    path(
+        "list_newsletters",
+        views.list_newsletters,
+        name="list_newsletters"
+        ),
     path(
         "newsletter/<int:newsletter_id>/",
         views.display_newsletter,
@@ -61,5 +70,25 @@ urlpatterns = [
         "view_subscriptions/",
         views.view_subscriptions,
         name="view_subscriptions"
-    )
+    ),
+    path(
+        "add_article/<int:newsletter_id>/",
+        views.add_article,
+        name="add_article"
+    ),
+    path(
+        "api/articles",
+        views.api_view_articles,
+        name="api_articles"
+    ),
+    path(
+        "api/articles/<int:article_id>",
+        views.api_retrieve_article,
+        name="api_article"
+    ),
+    path(
+        "api/subscribed",
+        views.api_view_subscriptions,
+        name="api_subscribed"
+    ),
 ]

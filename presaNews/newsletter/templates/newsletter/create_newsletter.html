@@ -1,0 +1,41 @@
+<!-- newsletter/templates/newsletter/edit_article.html --> 
+{% extends 'base.html' %} 
+{% block title %} 
+  Newsletter - {{ newsletter.title }} 
+{% endblock %}
+
+{% block header %}
+<h1>Create Newsletter</h1>  
+{% endblock header %}
+
+
+{% block content %} 
+
+  <table cellpadding="10" cellspacing="0">
+    <form method="POST">
+        {% csrf_token %}
+        <table border="1" cellpadding="10" cellspacing="0">
+            <tr>
+                <td><label for="title">Newsletter Title:</label></td>
+                <td><input type="text" id="title" name="title" required /></td>
+            </tr>
+            <tr>
+                <td><label for="content">Description:</label></td>
+                <td>
+                  <textarea id="content" name="content" required></textarea> 
+                </td>
+            </tr>
+            {% for article in articles %}
+            <tr>
+              
+                <td><label for="aritcle">{{ aritcle.name }}</label></td>
+                <td><input type="checkbox" name="test" value="red" id="colors_red"></td>
+              
+            </tr>
+            {% endfor %}
+        </table>
+        <br>
+        <button type="submit">Save</button>
+    </form>
+
+{% endblock %} 
