@@ -5,7 +5,6 @@ from .models import ResetToken  # Our model to store password reset tokens
 from newsletter.models import Publisher
 from django.urls import reverse  # To get URL from named paths
 from django.contrib.auth.models import (
-    User,
     Group,
     Permission,
 )  # Django's built-in user, group, and permission models
@@ -122,7 +121,7 @@ def create_editor():
             Permission.objects.get(
                 codename="delete_newsletter",
                 content_type__app_label="newsletter"
-            )
+            ),
         ])
         group.save()
 

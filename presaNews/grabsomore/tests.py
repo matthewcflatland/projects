@@ -22,13 +22,13 @@ class UserModelTest(TestCase):
         count = 10
         for i in range(count):
             self.user = CustomUser.objects.create_user(
-                username=f"testuser{i}", password="testpassword", email=f"test{i}@test.com"
+                username=f"testuser{i}",
+                password="testpassword",
+                email=f"test{i}@test.com"
             )
 
         user_list = CustomUser.objects.all()
-        print()
-        for user in user_list:
-            print(f"username: {user}")
+        self.assertEqual(len(user_list), 11)
 
 
 class ResetTokenModelTest(TestCase):

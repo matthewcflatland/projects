@@ -1,4 +1,4 @@
-<!-- newsletter/templates/newsletter/edit_article.html --> 
+<!-- newsletter/templates/newsletter/edit_newsletter.html --> 
 {% extends 'base.html' %} 
 {% block title %} 
   Newsletter - {{ newsletter.title }} 
@@ -20,9 +20,9 @@
                 <td><input type="text" id="title" name="new_title" value="{{ newsletter.title }}" required /></td>
             </tr>
             <tr>
-                <td><label for="content">Description:</label></td>
+                <td><label for="description">Description:</label></td>
                 <td>
-                  <textarea id="content" name="new_content" required>{{ newsletter.description }}</textarea> 
+                  <textarea id="description" name="new_description" required>{{ newsletter.description }}</textarea> 
                 </td>
             </tr>
             <tr>

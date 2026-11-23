@@ -29,6 +29,7 @@ urlpatterns = [
         views.reset_user_password,
         name="password_reset_form",
     ),
-    # Handles the form submission to actually change the password (POST request)
+    # Handles the form submission to actually change the password
+    # (POST request)
     path("reset_password/", views.reset_password, name="reset_password"),
 ]

@@ -155,18 +155,22 @@ def register_user(request):
             if account_type == "Reader":
                 reader_group = create_reader()
                 user.groups.add(reader_group)
+                user.publisher = None
+
             elif account_type == "Editor":
                 editor_group = create_editor()
                 user.groups.add(editor_group)
                 user.journalist_subscriptions.set([])
                 user.publisher_subscriptions.set([])
+
             elif account_type == "Journalist":
                 journalist_group = create_journalist()
                 user.groups.add(journalist_group)
                 user.journalist_subscriptions.set([])
                 user.publisher_subscriptions.set([])
             else:
-                pass  # If account type is invalid, do nothing (or handle error)
+                # If account type is invalid, do nothing (or handle error)
+                pass
 
             user.save()  # Save all changes to the database
 
@@ -270,7 +274,8 @@ def send_password_reset(request):
     if request.method == "POST":
         user_email = request.POST.get("email")
         try:
-            user = CustomUser.objects.get(email=user_email)  # Find user by email
+            # Find user by email
+            user = CustomUser.objects.get(email=user_email)
             reset_url = generate_reset_url(
                 user
             )  # Generate reset link with token

@@ -1,4 +1,4 @@
-<!-- newsletter/templates/newsletter/edit_article.html --> 
+<!-- newsletter/templates/newsletter/create_newsletter.html --> 
 {% extends 'base.html' %} 
 {% block title %} 
   Newsletter - {{ newsletter.title }} 
@@ -20,19 +20,11 @@
                 <td><input type="text" id="title" name="title" required /></td>
             </tr>
             <tr>
-                <td><label for="content">Description:</label></td>
+                <td><label for="description">Description:</label></td>
                 <td>
-                  <textarea id="content" name="content" required></textarea> 
+                  <textarea id="description" name="description" required></textarea> 
                 </td>
             </tr>
-            {% for article in articles %}
-            <tr>
-              
-                <td><label for="aritcle">{{ aritcle.name }}</label></td>
-                <td><input type="checkbox" name="test" value="red" id="colors_red"></td>
-              
-            </tr>
-            {% endfor %}
         </table>
         <br>
         <button type="submit">Save</button>

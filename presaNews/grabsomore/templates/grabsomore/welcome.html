@@ -30,10 +30,11 @@
         <a href="{% url 'newsletter:list_newsletters' %}">
             <button>📋 View all Newsletters</button>
         </a>
+        {% if user_group.name == Reader %}
         <a href="{% url 'newsletter:view_subscriptions' %}">
             <button>📋 View my Subscriptions</button>
         </a>
-
+        {% endif %}
     </div>
 </body>
 </html>
