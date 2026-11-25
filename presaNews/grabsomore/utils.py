@@ -14,7 +14,7 @@ def create_publisher(new_publisher, username):
         try:
             publisher = Publisher.objects.get(name=new_publisher)
         except Publisher.DoesNotExist:
-            publisher = Publisher.objects.create(name=new_publisher)            
+            publisher = Publisher.objects.create(name=new_publisher)
 
     return publisher
 

@@ -14,7 +14,7 @@ from .models import Article, Newsletter, Publisher
 from datetime import datetime
 
 
-# Create your tests here. 
+# Create your tests here.
 class ArticleListAPITestCase(APITestCase):
     def setUp(self):
         self.testpublisher = Publisher.objects.create(
