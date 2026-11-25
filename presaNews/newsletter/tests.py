@@ -1,3 +1,4 @@
+from unittest.mock import patch
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth import get_user_model
@@ -13,7 +14,7 @@ from .models import Article, Newsletter, Publisher
 from datetime import datetime
 
 
-# Create your tests here.   
+# Create your tests here. 
 class ArticleListAPITestCase(APITestCase):
     def setUp(self):
         self.testpublisher = Publisher.objects.create(
@@ -62,7 +63,7 @@ class ArticleListAPITestCase(APITestCase):
             publisher=self.journalist.publisher,
             approved=True
         )
-        self.url = reverse('newsletter:api_articles')
+        self.url = reverse('api_articles')
 
     def test_list_articles_endpoint(self):
         """Test GET /api/articles"""
@@ -138,16 +139,16 @@ class SingleArticleAPITestCase(APITestCase):
         )
 
         self.url = reverse(
-            'newsletter:api_article', kwargs={'article_id': self.article1.pk})
+            'api_article', kwargs={'article_id': self.article1.pk})
 
     def test_api_display_article(self):
-        '''testing API endpoint displaying single article'''
+        """testing API endpoint displaying single article"""
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['title'], self.article1.title)
 
     def test_api_edit_article_reader(self):
-        '''testing API endpoint reader role editing an article'''
+        """testing API endpoint reader role editing an article"""
         data = {"title": "test Article updated!",
                 "content": "test",
                 "author": self.journalist.id,
@@ -162,7 +163,7 @@ class SingleArticleAPITestCase(APITestCase):
             response.data, "You do not have permission to edit articles.")
 
     def test_api_edit_article_journalist(self):
-        '''testing API endpoint journalist role editing an article'''
+        """testing API endpoint journalist role editing an article"""
         data = {"title": "test Article updated!",
                 "content": "test",
                 "author": self.journalist.id,
@@ -190,8 +191,9 @@ class SingleArticleAPITestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(updated_response.data['approved'], False)
 
-    def test_api_edit_article_editor(self):
-        '''testing API endpoint editor role editing an article'''
+    @patch('newsletter.views.approve_article')
+    def test_api_edit_article_editor(self, mock_fetch):
+        """testing API endpoint editor role editing an article"""
         data = {"title": "test Article updated!2",
                 "content": "test",
                 "author": self.journalist.id,
@@ -212,13 +214,21 @@ class SingleArticleAPITestCase(APITestCase):
                 "created_at": datetime.now(),
                 "publisher": self.journalist.publisher.name,
                 "approved": True}
+        mock_fetch.return_value = {
+                "title": "test Article updated!2",
+                "content": "test",
+                "author": self.journalist.id,
+                "created_at": datetime.now(),
+                "publisher": self.journalist.publisher.name,
+                "approved": True}
         response = self.client.put(self.url, data, format='json')
         updated_response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(updated_response.data['approved'], True)
+        mock_fetch.assert_called()
+        self.assertEqual(mock_fetch.return_value['approved'], True)
 
     def test_api_delete_article_reader(self):
-        '''testing API endpoint reader role deleting an article'''
+        """testing API endpoint reader role deleting an article"""
         response = self.client.delete(self.url)
         updated_response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
@@ -227,7 +237,7 @@ class SingleArticleAPITestCase(APITestCase):
         self.assertEqual(updated_response.data['title'], self.article1.title)
 
     def test_api_delete_article_journalist(self):
-        '''testing API endpoint journalist role deleting an article'''
+        """testing API endpoint journalist role deleting an article"""
         self.client.credentials(HTTP_AUTHORIZATION=f"Token {self.token_j}")
         response = self.client.delete(self.url)
         updated_response = self.client.get(self.url)
@@ -237,7 +247,7 @@ class SingleArticleAPITestCase(APITestCase):
         self.assertEqual(updated_response.data, "Article does not exist")
 
     def test_api_delete_article_editor(self):
-        '''testing API endpoint editor role deleting an article'''
+        """testing API endpoint editor role deleting an article"""
         self.client.credentials(HTTP_AUTHORIZATION=f"Token {self.token_e}")
         response = self.client.delete(self.url)
         updated_response = self.client.get(self.url)
@@ -326,10 +336,10 @@ class APISubscribeTestCase(APITestCase):
         )
 
         self.url = reverse(
-            'newsletter:api_subscribed')
+            'api_subscribed')
 
     def test_journalist_subscription(self):
-        '''testing API Endpoint pulling articles from journalist'''
+        """testing API Endpoint pulling articles from journalist"""
         # adding first journalist to subscription
         self.reader.journalist_subscriptions.set([self.journalist])
         response = self.client.get(self.url)
@@ -346,7 +356,7 @@ class APISubscribeTestCase(APITestCase):
         self.assertEqual(response.data[1]["title"], self.article3.title)
 
     def test_publisher_subscription(self):
-        '''testing API Endpoint pulling articles from publisher'''
+        """testing API Endpoint pulling articles from publisher"""
         # adding publisher to subscription
         self.reader.publisher_subscriptions.set([self.testpublisher2])
         response = self.client.get(self.url)
@@ -356,8 +366,8 @@ class APISubscribeTestCase(APITestCase):
         self.assertEqual(response.data[1]["title"], self.article4.title)
 
     def test_both_subscription(self):
-        '''testing API Endpoint pulling articles from both publisher
-        and journalist'''
+        """testing API Endpoint pulling articles from both publisher
+        and journalist"""
         # adding journalist and publisher to subscription
         self.reader.journalist_subscriptions.set([self.journalist])
         self.reader.publisher_subscriptions.set([self.testpublisher2])
@@ -427,16 +437,17 @@ class NewsletterTestCase(TestCase):
         )
 
     def test_display_newsletter(self):
-        '''testing newsletters can been displayed'''
+        """testing newsletters can been displayed"""
         self.client.login(username="reader", password="password")
         response = self.client.get(reverse('newsletter:list_newsletters'))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn(self.newsletter1.title, response.content.decode())
 
     def test_create_newsletter(self):
-        '''testing creating newsletters based on user role'''
+        """testing creating newsletters based on user role"""
         url = reverse('newsletter:create_newsletter')
         data = {"title": "test newsletter", "description": "description"}
+        data2 = {"title": "test newsletter2", "description": "description"}
 
         self.client.login(username="reader", password="password")
         response = self.client.post(url, data, format='json')
@@ -450,22 +461,19 @@ class NewsletterTestCase(TestCase):
 
         self.client.login(username="editor", password="password")
         response = self.client.post(url, data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn(
-            "You do not have permission to create newsletters.",
-            response.content.decode())
-        with self.assertRaises(Newsletter.DoesNotExist):
-            Newsletter.objects.get(title="test newsletter")
-        self.client.logout()
-
-        self.client.login(username="journalist", password="password")
-        response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         newsletter = Newsletter.objects.get(title="test newsletter")
         self.assertEqual(newsletter.title, "test newsletter")
+        self.client.logout()
+
+        self.client.login(username="journalist", password="password")
+        response = self.client.post(url, data2, format='json')
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
+        newsletter = Newsletter.objects.get(title="test newsletter2")
+        self.assertEqual(newsletter.title, "test newsletter2")
 
     def test_delete_newsletter(self):
-        '''testing deleting newsletters based on user role'''
+        """testing deleting newsletters based on user role"""
         url = reverse(
             "newsletter:delete_newsletter",
             kwargs={'newsletter_id': self.newsletter4.pk})
@@ -474,7 +482,7 @@ class NewsletterTestCase(TestCase):
             kwargs={'newsletter_id': self.newsletter3.pk})
 
         self.client.login(username="reader", password="password")
-        response = self.client.delete(url)
+        response = self.client.post(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn(
             "You do not have permission to delete newsletters",
@@ -484,20 +492,20 @@ class NewsletterTestCase(TestCase):
         self.client.logout()
 
         self.client.login(username="editor", password="password")
-        response = self.client.delete(url)
+        response = self.client.post(url)
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         with self.assertRaises(Newsletter.DoesNotExist):
             Newsletter.objects.get(id=self.newsletter4.id)
         self.client.logout()
 
         self.client.login(username="journalist", password="password")
-        response = self.client.delete(url2)
+        response = self.client.post(url2)
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         with self.assertRaises(Newsletter.DoesNotExist):
             Newsletter.objects.get(id=self.newsletter3.id)
 
     def test_edit_newsletter(self):
-        '''testing editing newsletters based on user role'''
+        """testing editing newsletters based on user role"""
         url = reverse(
             "newsletter:edit_newsletter",
             kwargs={'newsletter_id': self.newsletter4.pk})

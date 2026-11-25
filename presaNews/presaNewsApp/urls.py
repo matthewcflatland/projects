@@ -22,5 +22,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path("", include("grabsomore.urls")),
     path("newsletter/", include("newsletter.urls")),
+    path("", include("newsletter.api_urls")),
     path('api-token-auth/', views.obtain_auth_token),
 ]

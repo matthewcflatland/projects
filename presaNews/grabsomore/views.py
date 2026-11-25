@@ -5,27 +5,23 @@ from django.shortcuts import (
     redirect,
 )  # To show HTML pages and redirect users
 from django.contrib.auth import (
-    get_user_model
-)  # Django's built-in user, group, and permission models
-from django.contrib.auth import (
     authenticate,
     login,
     logout,
 )  # Functions to handle login and logout
 from django.http import (
     HttpResponseRedirect,
-    HttpResponse,
 )  # For redirecting users or sending responses
 from django.urls import reverse, reverse_lazy  # Helps get URLs by their names
 from django.contrib.auth.decorators import (
     login_required,
 )  # Makes sure only logged-in users can access pages
-from datetime import datetime
+from datetime import datetime, timedelta
 from .utils import (
     create_editor,  # create editor group if missing
-    create_journalist, # create journalist group if missing
+    create_journalist,  # create journalist group if missing
     create_reader,  # create reader group if missing
-    create_publisher # create publisher if missing
+    create_publisher  # create publisher if missing
     )
 import secrets  # For generating secure random tokens
 from datetime import timedelta
@@ -36,12 +32,12 @@ from django.utils import (
 from django.core.exceptions import (
     ObjectDoesNotExist,
 )
-  # Helper functions for email and token generation
+# Helper functions for email and token generation
 from .models import (
     ResetToken,
     CustomUser,  # Our custom model to store reset tokens
 )
-from newsletter.models import Publisher
+from rest_framework.authtoken.models import Token
 from django.core.mail import EmailMessage  # To send emails
 from django.contrib.auth.hashers import (
     make_password,
@@ -69,10 +65,10 @@ def login_user(request):
         if user is not None:
             login(request, user)  # Log the user in and start their session
 
-            # Set the session to expire on 30 Dec 2025 (so user stays logged
-            # in until then)
-            exp_date = datetime(2025, 12, 30)
+            # Set the session to expire on 30 days from now (so user stays
+            # logged in until then)
             now = datetime.now()
+            exp_date = now + timedelta(days=30)
             expiry_seconds = int((exp_date - now).total_seconds())
             if expiry_seconds > 0:
                 request.session.set_expiry(
@@ -98,13 +94,13 @@ def login_user(request):
 
 
 def account_selector(request):
-    """rednders the acount type selector for registration"""
+    """renders the acount type selector for registration"""
     if request.method == "POST":
         account_type = request.POST.get("account_type")
 
         return render(
             request,
-            "grabsomore:register",
+            "grabsomore/register.html",
             {"account_type": account_type}
         )
 
@@ -142,8 +138,8 @@ def register_user(request):
                     username=username,
                     password=password,
                     email=email,
-                    publisher=publisher
                 )
+                Token.objects.get_or_create(user=user)
             except Exception:
                 return render(
                     request,
@@ -160,12 +156,14 @@ def register_user(request):
             elif account_type == "Editor":
                 editor_group = create_editor()
                 user.groups.add(editor_group)
+                user.publisher = publisher
                 user.journalist_subscriptions.set([])
                 user.publisher_subscriptions.set([])
 
             elif account_type == "Journalist":
                 journalist_group = create_journalist()
                 user.groups.add(journalist_group)
+                user.publisher = publisher
                 user.journalist_subscriptions.set([])
                 user.publisher_subscriptions.set([])
             else:
@@ -314,7 +312,7 @@ def reset_user_password(request, token):
         )  # Look for token in DB
 
         # Check if the token expired
-        if user_token.expiry_date.replace(tzinfo=None) < datetime.now():
+        if user_token.expiry_date < timezone.now():
             user_token.delete()  # Delete expired token
             return render(
                 request, "grabsomore/password_reset_expired.html"
@@ -369,9 +367,10 @@ def reset_password(request):
             reset_token = ResetToken.objects.get(token=hashed_token)
 
             # Check token expiry again (just to be sure)
-            if reset_token.expiry_date.replace(tzinfo=None) < datetime.now():
+            if reset_token.expiry_date < timezone.now():
                 reset_token.delete()
-                return render(request, "password_reset_expired.html")
+                return render(
+                    request, "grabsomore/password_reset_expired.html")
 
             # Update the user's password (hashed securely)
             user.password = make_password(password)
@@ -385,7 +384,8 @@ def reset_password(request):
             return HttpResponseRedirect(reverse("grabsomore:login"))
 
         except (CustomUser.DoesNotExist, ResetToken.DoesNotExist):
-            return render(request, "password_reset_invalid.html")
+            return render(
+                request, "grabsomore/password_reset_invalid.html")
 
     # If the page was accessed with GET or any other method, redirect
     # to login page

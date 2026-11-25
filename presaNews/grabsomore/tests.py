@@ -1,5 +1,4 @@
 from django.test import TestCase
-from hashlib import sha1  # Used to securely hash data (like tokens)
 from .models import ResetToken, CustomUser
 
 
@@ -35,7 +34,7 @@ class ResetTokenModelTest(TestCase):
     def setUp(self):
         # Create a User object for testing
         self.user = CustomUser.objects.create_user(
-            username="testuser", password="testpassword"
+            username="testuser", password="testpassword", email="test@test.com"
         )
         # Create a ResetToken object for testing
         self.reset_token = ResetToken.objects.create(

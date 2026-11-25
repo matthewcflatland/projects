@@ -1,7 +1,10 @@
+import requests
 from django.shortcuts import render, redirect
 from django.http import HttpResponseRedirect
 from django.urls import reverse, reverse_lazy
+from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
+from django.db.models import Q
 from datetime import datetime
 from .models import Article, Newsletter, Publisher
 from grabsomore.models import CustomUser
@@ -11,6 +14,7 @@ from rest_framework.decorators import (
     authentication_classes,
     permission_classes
     )
+from rest_framework.authtoken.models import Token
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -18,31 +22,62 @@ from rest_framework import status
 from .serializers import ArticleSerializer
 
 
+@api_view(['POST'])
+@authentication_classes((TokenAuthentication,))
+@permission_classes((IsAuthenticated,))
+def api_approved(request):
+    """API endpoint for approving articles"""
+    if request.method == "POST":
+        user = request.user
+        try:
+            user_group = user.groups.first()
+        except Exception:
+            user_group = ""
+        if user_group.name == "Editor":
+            article_id = request.data.get("article_id")
+            try:
+                article = Article.objects.get(id=article_id)
+            except Article.DoesNotExist:
+                return Response(
+                    data="Article not found",
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+
+            article.approved = True
+            article.approved_date = datetime.now()
+            article.save()
+            return Response(
+                data="Article approved.",
+                status=status.HTTP_201_CREATED,
+            )
+        else:
+            return Response(
+                data="Do not have authorization to approve articles.",
+                status=status.HTTP_403_FORBIDDEN
+            )
+    else:
+        return Response(
+            data="Method Not Allowed.",
+            status=status.HTTP_405_METHOD_NOT_ALLOWED,
+            )
+
+
 @api_view(['GET'])
 @authentication_classes((TokenAuthentication,))
 @permission_classes((IsAuthenticated,))
 def api_view_subscriptions(request):
-    '''API endpoint to retrieve user's subscriptions'''
+    """API endpoint to retrieve user's subscriptions"""
     user = request.user
 
-    # gets a qeury of users subscriptions
+    # gets a query of users subscriptions
     journalists = user.journalist_subscriptions.all()
     publishers = user.publisher_subscriptions.all()
     articles = []
 
-    # iterates through subscription list and put unique
-    # articles in a new list
-    for journalist in journalists:
-        temp = Article.objects.filter(author=journalist)
-        for item in temp:
-            if item.approved:
-                articles.append(item)
-
-    for publisher in publishers:
-        temp = Article.objects.filter(publisher=publisher)
-        for item in temp:
-            if item not in articles and item.approved:
-                articles.append(item)
+    articles = Article.objects.filter(
+        Q(author__in=journalists) |
+        Q(publisher__in=publishers),
+        approved=True).distinct()
 
     serializer = ArticleSerializer(articles, many=True)
 
@@ -53,8 +88,8 @@ def api_view_subscriptions(request):
 @authentication_classes((TokenAuthentication,))
 @permission_classes((IsAuthenticated,))
 def api_retrieve_article(request, article_id):
-    '''API endpoint for retriving an article,
-    editing an article and deleting an article'''
+    """API endpoint for retriving an article,
+    editing an article and deleting an article"""
     # get request for retriving an article
     if request.method == "GET":
         try:
@@ -72,7 +107,11 @@ def api_retrieve_article(request, article_id):
     # put request to edit an article
     elif request.method == "PUT":
         user = request.user
-        user_group = user.groups.first()
+        try:
+            user_group = user.groups.first()
+        except Exception:
+            user_group = ""
+
         if user.has_perms(["newsletter.change_article"]):
             try:
                 article = Article.objects.get(id=article_id)
@@ -97,16 +136,18 @@ def api_retrieve_article(request, article_id):
             article.title = new_title
             article.content = new_content
             # verifies user is an Editor before approving article
-            if approve is True:
-                if user_group.name == "Editor":
-                    article.approved = approve
-                    article.save()
-                    approve_article(article)
+            if article.approved is False:
+                if approve is True:
+                    if user_group.name == "Editor":
+                        approve_article(request, article)
+                    else:
+                        msg = "Do not have authorization to approve articles."
+                        return Response(
+                            data=msg,
+                            status=status.HTTP_403_FORBIDDEN
+                        )
                 else:
-                    return Response(
-                        data="Do not have authorization to approve articles.",
-                        status=status.HTTP_403_FORBIDDEN
-                    )
+                    article.save()
             else:
                 article.save()
 
@@ -156,9 +197,9 @@ def api_retrieve_article(request, article_id):
 @authentication_classes((TokenAuthentication,))
 @permission_classes((IsAuthenticated,))
 def api_view_articles(request):
-    '''API Endpoint for retriving all articles and creating a new article'''
+    """API Endpoint for retriving all articles and creating a new article"""
 
-    # get request to retrieve all articles
+    # get request to retrieve all articles list_articles
     if request.method == "GET":
         articles = Article.objects.filter(approved=True)
 
@@ -166,7 +207,7 @@ def api_view_articles(request):
 
         return Response(data=serializer.data, status=status.HTTP_200_OK)
 
-    # Post request to create a new article
+    # Post request to create a new article create_article
     elif request.method == "POST":
         user = request.user
         # check if user has permission to create articles
@@ -175,14 +216,16 @@ def api_view_articles(request):
             # get data from post request
             title = request.data.get("title")
             content = request.data.get("content")
-            publisher = Publisher.objects.get(name=user.publisher)
+            try:
+                publisher = Publisher.objects.get(name=user.publisher)
+            except Publisher.DoesNotExist:
+                publisher = None
 
             if not title or not content:
                 error = "Title and Content are required."
                 return Response(
                     data=error,
-                    status=status.HTTP_400_BAD_REQUEST,
-                    safe=False)
+                    status=status.HTTP_400_BAD_REQUEST)
 
             # create new article with data given
             article = Article.objects.create(
@@ -209,14 +252,13 @@ def api_view_articles(request):
     else:
         return Response(
             data="Method Not Allowed.",
-            status=status.HTTP_405_METHOD_NOT_ALLOWED,
-            safe=False)
+            status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 @login_required(login_url=reverse_lazy("grabsomore:login"))
 def view_subscriptions(request):
-    '''renders view_subscription.html with articles
-      that user is subscribed to'''
+    """renders view_subscription.html with articles
+      that user is subscribed to"""
     user = request.user
 
     # creates lists of user's subscriptions
@@ -245,63 +287,92 @@ def view_subscriptions(request):
 
 @login_required(login_url=reverse_lazy("grabsomore:login"))
 def subscribe_journalist(request, article_id):
-    '''subscribes to journalist'''
+    """subscribes to journalist"""
     user = request.user
-    article = Article.objects.get(id=article_id)
-    author = article.author
-    journalist = CustomUser.objects.get(id=author.id)
-    user.journalist_subscriptions.add(journalist)
-    return render(
+    try:
+        user_group = user.groups.first()
+    except Exception:
+        user_group = ""
+    if user_group.name == "Reader":
+        try:
+            article = Article.objects.get(id=article_id)
+            author = article.author
+            journalist = CustomUser.objects.get(id=author.id)
+            user.journalist_subscriptions.add(journalist)
+        except (Article.DoesNotExist, CustomUser.DoesNotExist):
+            return render(
                 request,
                 "newsletter/list_articles.html",
-                {"notification": f"Subscribed to {journalist}."}
+                {"error": "Article or Journalist not found"}
+            )
+        return render(
+                    request,
+                    "newsletter/list_articles.html",
+                    {"notification": f"Subscribed to {journalist}."}
+                )
+    else:
+        return render(
+                request,
+                "newsletter/list_articles.html",
+                {"error": "Do not have permssion to subscribe"}
             )
 
 
 @login_required(login_url=reverse_lazy("grabsomore:login"))
 def subscribe_publisher(request, article_id):
-    '''subscribes to publisher'''
+    """subscribes to publisher"""
     user = request.user
-    article = Article.objects.get(id=article_id)
-    publisher = Publisher.objects.get(id=article.publisher.id)
-    user.publisher_subscriptions.add(publisher)
-    return render(
+    try:
+        user_group = user.groups.first()
+    except Exception:
+        user_group = ""
+    if user_group.name == "Reader":
+        try:
+            article = Article.objects.get(id=article_id)
+            publisher = Publisher.objects.get(id=article.publisher.id)
+            user.publisher_subscriptions.add(publisher)
+        except (Article.DoesNotExist, Publisher.DoesNotExist):
+            return render(
+                            request,
+                            "newsletter/list_articles.html",
+                            {"error": "Article or Publisher not found"}
+                        )
+        return render(
+                    request,
+                    "newsletter/list_articles.html",
+                    {"notification": f"Subscribed to {publisher}."}
+                )
+    else:
+        return render(
                 request,
                 "newsletter/list_articles.html",
-                {"notification": f"Subscribed to {publisher}."}
+                {"error": "Do not have permssion to subscribe"}
             )
 
 
-def approve_article(article):
-    '''emails all subscribed users with newly approved article'''
-    # get approved article's author and publisher
-    journalist = article.author.id
-    publisher = article.publisher
+def approve_article(request, article):
+    """emails all subscribed users with newly approved article"""
+    # query all users that have subcribed to approved article
+    # journalist or publisher
+    user = request.user
+    token = Token.objects.get(user=user)
+    data = {"article_id": article.id}
+    url = reverse('api_approved')
+    header = {"Authorization": f"token {token}"}
+    response = requests.post(
+        f"http://localhost:8000/{url}",
+        json=data,
+        headers=header)
 
-    users = CustomUser.objects.all()
+    if article.publisher is None:
+        users = CustomUser.objects.filter(
+            journalist_subscriptions=article.author)
+    else:
+        users = CustomUser.objects.filter(
+            Q(journalist_subscriptions=article.author) |
+            Q(publisher_subscriptions=article.publisher)
+            ).distinct()
 
-    # iterates through each user subscriptions for author or publisher
-    temp = []
-    for user in users:
-        temp_j = []
-        temp_j = user.journalist_subscriptions.all()
-        for j in temp_j:
-            if journalist == j.id:
-                temp.append(user)
-                break
-
-        temp_p = []
-        temp_p = user.publisher_subscriptions.all()
-        for p in temp_p:
-            if publisher == p:
-                if user in temp:
-                    pass
-                else:
-                    temp.append(user)
-                break
-
-    # sends article in an email to each subscribed user
-    users = temp
     emails = build_email(users, article)
     for email in emails:
         email.send()
@@ -309,7 +380,7 @@ def approve_article(article):
 
 @login_required(login_url=reverse_lazy("grabsomore:login"))
 def create_article(request):
-    '''Creates a new article'''
+    """Creates a new article"""
     user = request.user
     # checks if user has permission to create articles
     if user.has_perms(["newsletter.add_article"]):
@@ -317,7 +388,10 @@ def create_article(request):
         if request.method == "POST":
             title = request.POST.get("title")
             content = request.POST.get("content")
-            publisher = Publisher.objects.get(name=user.publisher)
+            try:
+                publisher = Publisher.objects.get(name=user.publisher)
+            except Publisher.DoesNotExist:
+                publisher = None
 
             if not title or not content:
                 return render(
@@ -351,8 +425,9 @@ def create_article(request):
 
 
 @login_required(login_url=reverse_lazy("grabsomore:login"))
+@require_POST
 def delete_article(request, article_id):
-    '''deletes requested article'''
+    """deletes requested article"""
     user = request.user
     # checks if user has permission to delete articles
     if user.has_perms(["newsletter.delete_article"]):
@@ -367,13 +442,23 @@ def delete_article(request, article_id):
                 "newsletter/list_articles.html",
                 {"error": "The article does not exist."}
             )
+    else:
+        return render(
+            request,
+            "newsletter/list_articles.html",
+            {"error": "You do not have permission to delete articles"}
+        )
 
 
 @login_required(login_url=reverse_lazy("grabsomore:login"))
 def edit_article(request, article_id):
-    '''Renders edit article page with article information'''
+    """Renders edit article page with article information"""
     user = request.user
-    user_group = user.groups.first()
+    try:
+        user_group = user.groups.first()
+    except Exception:
+        user_group = ""
+
     # checks if user has permission to edit articles
     if user.has_perms(["newsletter.change_article"]):
         try:
@@ -407,9 +492,7 @@ def edit_article(request, article_id):
                     article.save()
                 else:
                     if approve == "True":
-                        article.approved = approve
-                        article.save()
-                        approve_article(article)
+                        approve_article(request, article)
                     else:
                         article.save()
             else:
@@ -433,13 +516,15 @@ def edit_article(request, article_id):
 
 @login_required(login_url=reverse_lazy("grabsomore:login"))
 def list_articles(request):
-    '''Renders list of all articles on the page'''
+    """Renders list of all articles on the page"""
     user = request.user
-    user_group = user.groups.first()
+    try:
+        user_group = user.groups.first()
+    except Exception:
+        user_group = ""
 
     # checks if user has permission to view articles
     if user.has_perms(["newsletter.view_article"]):
-        temp = Article.objects.all()
         edit_perm = False
 
         # checks if user has permission to edit articles
@@ -448,18 +533,13 @@ def list_articles(request):
 
             # checks if user is a Journalist
             if user_group.name == "Journalist":
-                articles = []
-                for item in temp:
-                    if item.author == user:
-                        articles.append(item)
+                articles = Article.objects.filter(author=user)
+
             else:
-                articles = temp
+                articles = Article.objects.all()
 
         else:
-            articles = []
-            for item in temp:
-                if item.approved:
-                    articles.append(item)
+            articles = Article.objects.filter(approved=True)
 
         # checks if user can create articles
         if user.has_perms(["newsletter.add_article"]):
@@ -484,17 +564,40 @@ def list_articles(request):
 
 @login_required(login_url=reverse_lazy("grabsomore:login"))
 def display_article(request, article_id):
-    '''Renders a requested article page with article information'''
-    article = Article.objects.get(id=article_id)
-
-    return render(
-        request, "newsletter/article.html", {"article": article}
-    )
+    """Renders a requested article page with article information"""
+    user = request.user
+    try:
+        user_group = user.groups.first()
+    except Exception:
+        user_group = ""
+    try:
+        article = Article.objects.get(id=article_id)
+    except Article.DoesNotExist:
+        return render(
+            request,
+            "newsletter/list_articles.html",
+            {"error": "Article not found."}
+        )
+    if user_group.name == "Reader":
+        if article.approved:
+            return render(
+                request, "newsletter/article.html", {"article": article}
+            )
+        else:
+            return render(
+                request,
+                "newsletter/list_articles.html",
+                {"error": "Article not found."}
+            )
+    else:
+        return render(
+            request, "newsletter/article.html", {"article": article}
+        )
 
 
 @login_required(login_url=reverse_lazy("grabsomore:login"))
 def create_newsletter(request):
-    '''Creates a new Newsletter'''
+    """Creates a new Newsletter"""
     user = request.user
     # checks if user has permission to create newsletters
     if user.has_perms(["newsletter.add_newsletter"]):
@@ -502,7 +605,6 @@ def create_newsletter(request):
         if request.method == "POST":
             title = request.POST.get("title")
             description = request.POST.get("description")
-            publisher = Publisher.objects.get(name=user.publisher)
 
             if not title or not description:
                 return render(
@@ -535,8 +637,9 @@ def create_newsletter(request):
 
 
 @login_required(login_url=reverse_lazy("grabsomore:login"))
+@require_POST
 def delete_newsletter(request, newsletter_id):
-    '''deletes requested newsletter'''
+    """deletes requested newsletter"""
     user = request.user
     # checks if user has permission to delete newsletters
     if user.has_perms(["newsletter.delete_newsletter"]):
@@ -561,7 +664,7 @@ def delete_newsletter(request, newsletter_id):
 
 @login_required(login_url=reverse_lazy("grabsomore:login"))
 def edit_newsletter(request, newsletter_id):
-    '''Renders edit newsletter page with newsletter information'''
+    """Renders edit newsletter page with newsletter information"""
     user = request.user
     # checks if user has permission to edit newsletters
     if user.has_perms(["newsletter.change_newsletter"]):
@@ -614,7 +717,7 @@ def edit_newsletter(request, newsletter_id):
 
 @login_required(login_url=reverse_lazy("grabsomore:login"))
 def list_newsletters(request):
-    '''Renders list of all newsletters on the page'''
+    """Renders list of all newsletters on the page"""
     user = request.user
 
     if user.has_perms(["newsletter.view_newsletter"]):
@@ -622,7 +725,7 @@ def list_newsletters(request):
         edit_perm = False
         if user.has_perms(["newsletter.change_newsletter"]):
             edit_perm = True
-        if user.has_perms(["newsletter.add_article"]):
+        if user.has_perms(["newsletter.add_newsletter"]):
             create_perm = True
         else:
             create_perm = False
@@ -642,7 +745,7 @@ def list_newsletters(request):
 
 @login_required(login_url=reverse_lazy("grabsomore:login"))
 def display_newsletter(request, newsletter_id):
-    '''Renders a requested newsletter page with newsletter information'''
+    """Renders a requested newsletter page with newsletter information"""
     newsletter = Newsletter.objects.get(id=newsletter_id)
     articles = newsletter.articles.all()
 
@@ -655,7 +758,7 @@ def display_newsletter(request, newsletter_id):
 
 @login_required(login_url=reverse_lazy("grabsomore:login"))
 def add_article(request, newsletter_id):
-    '''Renders edit newsletter page with newsletter information'''
+    """Renders add article page with selectable articles"""
     user = request.user
     if user.has_perms(["newsletter.change_newsletter"]):
         try:
@@ -672,8 +775,8 @@ def add_article(request, newsletter_id):
         if request.method == "POST":
             temp_articles = request.POST.getlist("articles")
             new_articles = []
-            for temp in temp_articles:
-                temp_article = Article.objects.get(id=temp)
+            for article_id in temp_articles:
+                temp_article = Article.objects.get(id=article_id)
                 new_articles.append(temp_article)
 
             for article in new_articles:
@@ -685,15 +788,13 @@ def add_article(request, newsletter_id):
             return redirect(reverse("newsletter:list_newsletters"))
 
         # Show form when page is first loaded (GET request)
-        all_articles = list(Article.objects.all())
         if articles is None:
             pass
         else:
-            for article in all_articles:
-                for a in articles:
-                    if a == article:
-                        all_articles.remove(a)
-                        break
+            article_ids = []
+            for article in articles:
+                article_ids.append(article.id)
+            all_articles = Article.objects.exclude(pk__in=article_ids)
         return render(
             request,
             "newsletter/add_article.html",

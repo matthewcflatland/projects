@@ -50,9 +50,11 @@
                                 </a>
                             </td>
                             <td>
+                                {% if article.publisher %}
                                 <a href="{% url 'newsletter:subscribe_publisher' article.id %}">
                                     <button>📋 Subscribe</button>
-                                </a>                                
+                                </a>
+                                {% endif %}                         
                             </td>
                         {% endif %}                        
                     </tr>

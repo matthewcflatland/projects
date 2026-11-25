@@ -63,13 +63,17 @@
         <br>
         <button type="submit">Save Edits</button>
     </form>
+
     <div class="menu">
-      <a href="{% url 'newsletter:list_newsletters' %}">
-        <button>📋 back</button>
-      </a>
-      <a href="{% url 'newsletter:delete_newsletter' newsletter_id=newsletter.id %}">
-        <button>📋 delete</button>
-      </a>  
+        <form action="{% url 'newsletter:delete_newsletter' newsletter.id %}" method="post">
+            {% csrf_token %}
+            
+            <button type="submit">Delete Post</button>
+        </form>
+        <br>
+            <a href="{% url 'newsletter:list_newsletters' %}">
+                <button>📋 back</button>
+            </a>  
     </div>
     
 {% endblock %}

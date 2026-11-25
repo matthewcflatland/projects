@@ -38,6 +38,7 @@ class Article(models.Model):
     publisher = models.ForeignKey(
         Publisher,
         on_delete=models.CASCADE,
+        null=True,
         blank=True
         )  # Optional
 

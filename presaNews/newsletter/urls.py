@@ -75,19 +75,4 @@ urlpatterns = [
         views.add_article,
         name="add_article"
     ),
-    path(
-        "api/articles",
-        views.api_view_articles,
-        name="api_articles"
-    ),
-    path(
-        "api/articles/<int:article_id>",
-        views.api_retrieve_article,
-        name="api_article"
-    ),
-    path(
-        "api/articles/subscribed",
-        views.api_view_subscriptions,
-        name="api_subscribed"
-    ),
 ]

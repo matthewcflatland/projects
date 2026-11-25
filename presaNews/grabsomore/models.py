@@ -1,7 +1,7 @@
 from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
-from newsletter.models import Article, Publisher, Newsletter
+from newsletter.models import Publisher
 
 
 class ResetToken(models.Model):
@@ -18,7 +18,8 @@ class ResetToken(models.Model):
 
     def __str__(self):
         # Show a short summary for easier debugging
-        return f"ResetToken(user={self.user.username}, token={self.token[:10]}..., used={self.used})"
+        return (f"ResetToken(user={self.user.username},"
+                f"token={self.token[:10]}..., used={self.used})")
 
 
 class CustomUser(AbstractUser):
